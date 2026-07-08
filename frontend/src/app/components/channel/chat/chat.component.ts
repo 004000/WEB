@@ -19,6 +19,7 @@ import { ActivatedRoute } from '@angular/router';
 import { NotificationsService } from '../../../services/notifications.service';
 import { User } from '../../../models/user.model';
 import { AdminService } from '../../../services/admin.service';
+import { MessageTimePipe } from '../../../pipes/message-time.pipe';
 
 type LoadMsgOpt = {
   scrollDown?: boolean;
@@ -45,7 +46,8 @@ type ScrollOpt = {
     NbButtonModule,
     NbListModule,
     NbBadgeModule,
-    MessageComponent
+    MessageComponent,
+    MessageTimePipe
   ],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'

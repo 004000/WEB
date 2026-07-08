@@ -9,9 +9,9 @@ nb-list-item {
 .search-bar-wrapper {
   position: sticky;
   //noinspection CssInvalidPropertyValue
-  top: calc(nb-theme(header-height) + nb-theme(header-padding) * 2);
+  top: nb-theme(header-height);
   z-index: 900;
-  margin: 8px auto 16px;
+  margin: 4px auto 8px;
   max-width: 480px;
   width: 100%;
 }
@@ -76,11 +76,25 @@ nb-list-item {
   }
 }
 
+.search-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
 .search-result-author {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-primary-color, inherit);
-  margin-bottom: 2px;
+}
+
+.search-result-time {
+  font-size: 0.75rem;
+  color: var(--text-hint-color, #8f9bb3);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .search-result-text {

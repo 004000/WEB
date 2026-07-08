@@ -18,7 +18,10 @@
       } @else {
         @for (result of searchResults; track result.id) {
           <div class="search-result-item" (click)="selectSearchResult(result)">
-            <div class="search-result-author">{{ result.author }}</div>
+            <div class="search-result-header">
+              <span class="search-result-author">{{ result.author }}</span>
+              <span class="search-result-time">{{ result.timestamp | messageTime }}</span>
+            </div>
             <div class="search-result-text">{{ result.text }}</div>
           </div>
         }

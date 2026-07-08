@@ -1,1 +1,7 @@
- <router-outlet></router-outlet>
+ @if (updateAvailable) {
+  <div class="update-banner">
+    <span>🔄 האתר עבר שדרוג, רעננו את הדף לגרסה העדכנית</span>
+    <button (click)="reloadPage()">רענון עכשיו</button>
+  </div>
+}
+<router-outlet></router-outlet>

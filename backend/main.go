@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/json"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/boj/redistore"
 	"github.com/go-chi/chi"
@@ -15,6 +17,12 @@ import (
 )
 
 var rootStaticFolder = os.Getenv("ROOT_STATIC_FOLDER")
+var serverStartTime = time.Now().Format(time.RFC3339Nano)
+
+func getVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"version": serverStartTime})
+}
 
 func protectedWithPrivilege(Privilege Privilege, handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +64,8 @@ func main() {
 
 	// Protected with api key
 	r.Post("/api/import/post", addNewPost)
+
+	r.Get("/api/version", getVersion)
 
 	r.Get("/auth/google", getGoogleAuthValues)
 	r.Post("/auth/login", login)
