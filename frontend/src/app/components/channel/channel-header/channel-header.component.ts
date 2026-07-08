@@ -6,6 +6,7 @@ import {
   NbIconModule,
   NbMenuItem,
   NbMenuService,
+  NbThemeService,
   NbToastrService,
   NbUserModule
 } from "@nebular/theme";
@@ -59,6 +60,7 @@ export class ChannelHeaderComponent implements OnInit {
   userMenuTag = 'user-menu';
   userMenu: NbMenuItem[] = [];
   isSmallScreen = false;
+  isDarkMode = false;
 
   constructor(
     public chatService: ChatService,
@@ -69,7 +71,9 @@ export class ChannelHeaderComponent implements OnInit {
     public notificationsService: NotificationsService,
     private titleService: Title,
     private dialogService: NbDialogService,
+    private themeService: NbThemeService,
   ) {
+    this.isDarkMode = localStorage.getItem('darkMode') === '1';
   }
 
   @HostListener('window:resize')
@@ -142,5 +146,11 @@ export class ChannelHeaderComponent implements OnInit {
 
   openContactUs() {
     window.open(this.chatService.channelInfo?.contact_us, '_blank');
+  }
+
+  toggleDarkMode() {
+    this.isDarkMode = !this.isDarkMode;
+    this.themeService.changeTheme(this.isDarkMode ? 'custom-dark' : 'custom');
+    localStorage.setItem('darkMode', this.isDarkMode ? '1' : '0');
   }
 }

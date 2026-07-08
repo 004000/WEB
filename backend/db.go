@@ -259,6 +259,121 @@ var getMessageRange = redis.NewScript(`
 	return cjson.encode(messages)
 `)
 
+var searchMessagesScript = redis.NewScript(`
+	local time_set_key = KEYS[1]
+
+	local query = string.lower(ARGV[1])
+	local required_length = tonumber(ARGV[2])
+	local isAdmin = ARGV[3] == 'true'
+	local countViews = ARGV[4] == 'true'
+	local max_scan = tonumber(ARGV[5])
+
+	local matches = {}
+	local start_index = 0
+	local scanned = 0
+	local batch_size = 200
+
+	repeat
+		local stop_index = start_index + batch_size - 1
+		local message_ids = redis.call('ZREVRANGE', time_set_key, start_index, stop_index)
+
+		if #message_ids == 0 then
+			break
+		end
+
+		for i, message_key in ipairs(message_ids) do
+			scanned = scanned + 1
+			local message_data = redis.call('HGETALL', message_key)
+			local message = {}
+			local text_lower = ''
+
+			for j = 1, #message_data, 2 do
+				local key = message_data[j]
+				local value = message_data[j+1]
+
+				if key == 'id' then
+					message[key] = tonumber(value)
+				elseif key == 'views' then
+					if countViews then
+						message[key] = tonumber(value)
+					else
+						message[key] = 0
+					end
+				elseif key == 'deleted' then
+					message[key] = value == '1'
+				elseif key == 'author' then
+					if isAdmin then
+						message[key] = value
+					else
+						message[key] = "Anonymous"
+					end
+				elseif key == 'authorId' then
+					if isAdmin then
+						message[key] = value
+					else
+						message[key] = "Anonymous"
+					end
+				elseif key == 'reactions' then
+					local success, parsedReactions = pcall(cjson.decode, value)
+					if success then
+						message[key] = parsedReactions
+					else
+						message[key] = {}
+					end
+				elseif key == 'is_ads' then
+					message[key] = value == '1'
+				else
+					message[key] = value
+				end
+
+				if key == 'text' then
+					text_lower = string.lower(value)
+				end
+			end
+
+			if (not message['deleted'] or isAdmin) and string.find(text_lower, query, 1, true) then
+				table.insert(matches, message)
+			end
+
+			if #matches >= required_length then
+				break
+			end
+		end
+
+		start_index = start_index + batch_size
+
+	until #matches >= required_length or scanned >= max_scan
+
+	return cjson.encode(matches)
+`)
+
+func funcSearchMessages(ctx context.Context, query string, limit int, isAdmin, countViews bool) ([]Message, error) {
+	const maxScan = 5000
+
+	res, err := searchMessagesScript.Run(ctx, rdb, []string{"m_times:1"}, []string{
+		query,
+		strconv.Itoa(limit),
+		strconv.FormatBool(isAdmin),
+		strconv.FormatBool(countViews),
+		strconv.Itoa(maxScan),
+	}).Result()
+	if err != nil {
+		return []Message{}, err
+	}
+
+	if res == "{}" {
+		return []Message{}, nil
+	}
+
+	var messages []Message
+	resStr, _ := dyno.GetString(res)
+	if err := json.Unmarshal([]byte(resStr), &messages); err != nil {
+		return []Message{}, err
+	}
+
+	return messages, nil
+}
+
 func funcGetMessageRange(ctx context.Context, start, stop int64, isAdmin, countViews bool, direction string) ([]Message, error) {
 	offsetKeyName := fmt.Sprintf("messages:%d", start)
 	res, err := getMessageRange.Run(ctx, rdb, []string{"m_times:1", offsetKeyName}, []string{strconv.FormatInt(stop, 10), strconv.FormatBool(isAdmin), strconv.FormatBool(countViews), direction}).Result()

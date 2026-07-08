@@ -66,6 +66,12 @@ export class ChatService {
     });
   }
 
+  searchMessages(query: string, limit: number = 30): Observable<ChatResponse> {
+    return this.http.get<ChatResponse>('/api/messages/search', {
+      params: { q: query, limit: limit.toString() }
+    });
+  }
+
   setReact(messageId: number, react: string) {
     return firstValueFrom(this.http.post<ResponseResult>('/api/reactions/set-reactions', { messageId, emoji: react }));
   }

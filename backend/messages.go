@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -131,6 +132,33 @@ func deleteMessage(w http.ResponseWriter, r *http.Request) {
 
 	response := Response{Success: true}
 	json.NewEncoder(w).Encode(response)
+}
+
+func searchMessages(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	w.Header().Set("Content-Type", "application/json")
+
+	if len(query) < 2 {
+		json.NewEncoder(w).Encode([]Message{})
+		return
+	}
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil || limit <= 0 || limit > 100 {
+		limit = 30
+	}
+
+	messages, err := funcSearchMessages(ctx, query, limit, checkPrivilege(r, Writer), settingConfig.CountViews)
+	if err != nil {
+		log.Printf("Failed to search messages: %v\n", err)
+		http.Error(w, "error", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(messages)
 }
 
 func getEvents(w http.ResponseWriter, r *http.Request) {

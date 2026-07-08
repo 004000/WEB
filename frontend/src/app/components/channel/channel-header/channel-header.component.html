@@ -37,6 +37,11 @@
     </button>
   }
 
+  <button nbButton shape="round" class="m-2" [title]="isDarkMode ? 'מצב בהיר' : 'מצב חושך'"
+    (click)="toggleDarkMode()" status="basic">
+    <nb-icon [icon]="isDarkMode ? 'sun-outline' : 'moon-outline'"></nb-icon>
+  </button>
+
   @if (notificationsService.initialized) {
     <button nbButton shape="round" class="m-2" title="התראות" status="danger"
       (click)="notificationsService.requestPermission()">
