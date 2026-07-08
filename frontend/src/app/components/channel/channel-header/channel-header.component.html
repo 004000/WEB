@@ -1,10 +1,4 @@
-<div class="d-flex flex-row gap-2 align-items-center justify-content-between position-relative">
-  @if (chatService.channelInfo?.connectedUsersAmount !== undefined) {
-    <div class="live-users-badge" title="משתתפים מחוברים כעת">
-      <span class="live-dot"></span>
-      <span>{{ chatService.channelInfo?.connectedUsersAmount }} מחוברים</span>
-    </div>
-  }
+<div class="d-flex flex-row gap-2 align-items-center justify-content-between">
   <div class="bg-light rounded-circle d-flex align-items-center justify-content-center"
     style="width: 60px; height: 60px">
     @if (chatService.channelInfo?.logoUrl?.length) {
@@ -24,9 +18,17 @@
         {{ chatService.channelInfo?.description }}
       </small>
     }
-    <small>
-      {{ chatService.channelInfo?.views }} משתתפים
-    </small>
+    <div class="d-flex flex-row align-items-center gap-2">
+      <small>
+        {{ chatService.channelInfo?.views }} משתתפים
+      </small>
+      @if (chatService.channelInfo?.connectedUsersAmount !== undefined) {
+        <div class="live-users-badge" title="משתתפים מחוברים כעת">
+          <span class="live-dot"></span>
+          <span>{{ chatService.channelInfo?.connectedUsersAmount }} מחוברים כעת</span>
+        </div>
+      }
+    </div>
   </div>
 
   @if (chatService.channelInfo?.contact_us) {

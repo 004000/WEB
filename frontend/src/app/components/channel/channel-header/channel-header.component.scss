@@ -5,16 +5,13 @@
 }
 
 .live-users-badge {
-    position: absolute;
-    top: 6px;
-    right: 12px;
     display: flex;
     align-items: center;
     gap: 4px;
     font-size: 0.75rem;
     background: rgba(0, 0, 0, 0.05);
     border-radius: 12px;
-    padding: 2px 8px;
+    padding: 1px 8px;
 
     .live-dot {
         width: 8px;
