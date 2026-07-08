@@ -1,3 +1,5 @@
+@use '../../../../themes' as *;
+
 nb-list-item {
   border-bottom: 0 !important;
   padding: 0 !important;
@@ -5,6 +7,10 @@ nb-list-item {
 }
 
 .search-bar-wrapper {
+  position: sticky;
+  //noinspection CssInvalidPropertyValue
+  top: calc(nb-theme(header-height) + nb-theme(header-padding) * 2);
+  z-index: 900;
   margin: 8px auto 16px;
   max-width: 480px;
   width: 100%;
@@ -13,7 +19,9 @@ nb-list-item {
 .search-bar {
   display: flex;
   align-items: center;
-  background: var(--background-basic-color-2, #f4f4f5);
+  background: var(--background-basic-color-1);
+  border: 1px solid var(--border-basic-color-3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   border-radius: 20px;
   padding: 8px 16px;
   gap: 8px;

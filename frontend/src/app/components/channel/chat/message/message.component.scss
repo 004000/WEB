@@ -5,6 +5,10 @@
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+.text-black-50 {
+  color: var(--text-hint-color) !important;
+}
+
 nb-icon {
   cursor: pointer;
 }
