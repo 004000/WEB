@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, Observable, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Channel } from '../models/channel.model';
 import { ResponseResult } from '../models/response-result.model';
 
@@ -45,7 +45,50 @@ export class ChatService {
   private emojis: string[] = [];
   public channelInfo?: Channel;
 
-  constructor(private http: HttpClient) { }
+  public searchQuery: string = '';
+  public searchResults: ChatMessage[] = [];
+  public isSearching: boolean = false;
+  public resultSelected = new Subject<ChatMessage>();
+  private searchInputSubject = new Subject<string>();
+
+  constructor(private http: HttpClient) {
+    this.searchInputSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => this.performSearch(query));
+  }
+
+  onSearchInput(value: string) {
+    this.searchQuery = value;
+    this.searchInputSubject.next(value.trim());
+  }
+
+  private async performSearch(query: string) {
+    if (query.length < 2) {
+      this.searchResults = [];
+      this.isSearching = false;
+      return;
+    }
+    this.isSearching = true;
+    try {
+      this.searchResults = await firstValueFrom(this.searchMessages(query));
+    } catch {
+      this.searchResults = [];
+    } finally {
+      this.isSearching = false;
+    }
+  }
+
+  selectSearchResult(message: ChatMessage) {
+    this.resultSelected.next(message);
+    this.closeSearch();
+  }
+
+  closeSearch() {
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.isSearching = false;
+  }
 
   async updateChannelInfo() {
     this.channelInfo = await firstValueFrom(this.http.get<Channel>('/api/channel/info'));

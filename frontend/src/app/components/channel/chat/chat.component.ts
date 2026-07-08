@@ -12,14 +12,13 @@ import {
   NbToastrService
 } from "@nebular/theme";
 import { MessageComponent } from "./message/message.component";
-import { firstValueFrom, interval, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { firstValueFrom, interval } from 'rxjs';
 import { ChatMessage, ChatService } from '../../../services/chat.service';
 import { AuthService } from '../../../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { NotificationsService } from '../../../services/notifications.service';
 import { User } from '../../../models/user.model';
 import { AdminService } from '../../../services/admin.service';
-import { MessageTimePipe } from '../../../pipes/message-time.pipe';
 
 type LoadMsgOpt = {
   scrollDown?: boolean;
@@ -46,8 +45,7 @@ type ScrollOpt = {
     NbButtonModule,
     NbListModule,
     NbBadgeModule,
-    MessageComponent,
-    MessageTimePipe
+    MessageComponent
   ],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'
@@ -68,12 +66,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   private lastHeartbeat: number = Date.now();
   private subLastHeartbeat: any;
   lastReadMessageId: number = 0;
-
-  searchOpen: boolean = false;
-  searchQuery: string = '';
-  searchResults: ChatMessage[] = [];
-  isSearching: boolean = false;
-  private searchSubject = new Subject<string>();
 
   constructor(
     private chatService: ChatService,
@@ -124,41 +116,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  onSearchInput(value: string) {
-    this.searchQuery = value;
-    this.searchSubject.next(value.trim());
-  }
-
-  async performSearch(query: string) {
-    if (query.length < 2) {
-      this.searchResults = [];
-      this.isSearching = false;
-      return;
-    }
-    this.isSearching = true;
-    try {
-      this.searchResults = await firstValueFrom(this.chatService.searchMessages(query));
-    } catch {
-      this.searchResults = [];
-    } finally {
-      this.isSearching = false;
-    }
-  }
-
-  selectSearchResult(message: ChatMessage) {
-    this.closeSearch();
-    if (message.id !== undefined) {
-      this.scrollToId({ messageId: message.id, smooth: true, mark: true });
-    }
-  }
-
-  closeSearch() {
-    this.searchOpen = false;
-    this.searchQuery = '';
-    this.searchResults = [];
-    this.isSearching = false;
-  }
-
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.router.fragment.subscribe(fragment => {
@@ -177,10 +134,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.initializeMessageListener();
     this.keepAliveSSE();
 
-    this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(query => this.performSearch(query));
+    this.chatService.resultSelected.subscribe(message => {
+      if (message.id !== undefined) {
+        this.scrollToId({ messageId: message.id, smooth: true, mark: true });
+      }
+    });
 
     this._authService.loadUserInfo().then((res) => {
       this.userInfo = res;
@@ -276,7 +234,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.chatService.sseClose();
     clearInterval(this.subLastHeartbeat);
-    this.searchSubject.complete();
   }
 
   async keepAliveSSE() {

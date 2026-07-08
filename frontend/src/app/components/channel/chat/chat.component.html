@@ -1,35 +1,3 @@
-<div class="search-bar-wrapper">
-  <div class="search-bar">
-    <input type="text" class="search-input" placeholder="חיפוש..." [ngModel]="searchQuery"
-      (ngModelChange)="onSearchInput($event)" />
-    @if (searchQuery) {
-      <nb-icon icon="close-outline" class="search-clear-icon" (click)="closeSearch()"></nb-icon>
-    } @else {
-      <nb-icon icon="search-outline" class="search-icon"></nb-icon>
-    }
-  </div>
-
-  @if (searchQuery.trim().length >= 2) {
-    <div class="search-results">
-      @if (isSearching) {
-        <div class="search-status">מחפש...</div>
-      } @else if (searchResults.length === 0) {
-        <div class="search-status">לא נמצאו תוצאות</div>
-      } @else {
-        @for (result of searchResults; track result.id) {
-          <div class="search-result-item" (click)="selectSearchResult(result)">
-            <div class="search-result-header">
-              <span class="search-result-author">{{ result.author }}</span>
-              <span class="search-result-time">{{ result.timestamp | messageTime }}</span>
-            </div>
-            <div class="search-result-text">{{ result.text }}</div>
-          </div>
-        }
-      }
-    </div>
-  }
-</div>
-
 <div nbInfiniteList (scroll)="onListScroll()" [threshold]="300" [throttleTime]="1000" (topThreshold)="loadMessages()"
   (bottomThreshold)="loadMessages({ scrollDown: true })" [listenWindowScroll]="true">
   <nb-list class="flex-column-reverse" [class.hide-scheduled-messages]="hideScheduledMessages">

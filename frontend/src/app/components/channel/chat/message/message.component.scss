@@ -55,10 +55,12 @@ nb-icon {
   i {
     cursor: pointer;
   }
+}
 
-  .mark_message {
-    border: 2px solid #6a6fff;
-  }
+:host(.mark_message) .message-card {
+  border: 2px solid #6a6fff !important;
+  box-shadow: 0 0 0 3px rgba(106, 111, 255, 0.25);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .emojis-section {

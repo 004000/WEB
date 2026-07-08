@@ -19,6 +19,8 @@ import { ChatService } from '../../../services/chat.service';
 import { NotificationsService } from '../../../services/notifications.service';
 import { AdminPanelComponent } from "../../admin/admin-panel.component";
 import { User } from '../../../models/user.model';
+import { FormsModule } from '@angular/forms';
+import { MessageTimePipe } from '../../../pipes/message-time.pipe';
 
 @Component({
   selector: 'app-channel-header',
@@ -26,7 +28,9 @@ import { User } from '../../../models/user.model';
     NbButtonModule,
     NbIconModule,
     NbUserModule,
-    NbContextMenuModule
+    NbContextMenuModule,
+    FormsModule,
+    MessageTimePipe
 ],
   templateUrl: './channel-header.component.html',
   styleUrl: './channel-header.component.scss'
