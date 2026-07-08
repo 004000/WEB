@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,6 +18,7 @@ import (
 var redisType = os.Getenv("REDIS_PROTOCOL")
 var redisAddr = os.Getenv("REDIS_ADDR")
 var redisPass = os.Getenv("REDIS_PASSWORD")
+var redisTLS = os.Getenv("REDIS_TLS") == "1"
 var rdb *redis.Client
 
 type Message struct {
@@ -50,12 +52,18 @@ type PushMessage struct {
 func init() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	rdb = redis.NewClient(&redis.Options{
+	opts := &redis.Options{
 		Network:  redisType,
 		Addr:     redisAddr,
 		Password: redisPass,
 		DB:       0,
-	})
+	}
+	if redisTLS {
+		opts.TLSConfig = &tls.Config{
+			ServerName: strings.Split(redisAddr, ":")[0],
+		}
+	}
+	rdb = redis.NewClient(opts)
 
 	_, err := rdb.Ping(ctx).Result()
 	if err != nil {

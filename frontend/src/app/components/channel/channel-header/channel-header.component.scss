@@ -3,3 +3,39 @@
     width: 60px;
     cursor: pointer;
 }
+
+.live-users-badge {
+    position: absolute;
+    top: 6px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    padding: 2px 8px;
+
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #2ecc71;
+        box-shadow: 0 0 0 rgba(46, 204, 113, 0.6);
+        animation: live-pulse 2s infinite;
+    }
+}
+
+@keyframes live-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
+}

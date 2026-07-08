@@ -19,6 +19,7 @@ type Channel struct {
 	Views                   int64     `json:"views"`
 	RequireAuthForViewFiles bool      `json:"require_auth_for_view_files"`
 	ContactUs               string    `json:"contact_us"`
+	ConnectedUsersAmount    int64     `json:"connectedUsersAmount"`
 }
 
 func getChannelInfo(w http.ResponseWriter, r *http.Request) {
@@ -48,6 +49,7 @@ func getChannelInfo(w http.ResponseWriter, r *http.Request) {
 	channel.LogoUrl = c["logoUrl"]
 	channel.RequireAuthForViewFiles = settingConfig.RequireAuthForViewFiles
 	channel.ContactUs = settingConfig.ContactUs
+	channel.ConnectedUsersAmount = openSSEConnections.Load()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(channel)

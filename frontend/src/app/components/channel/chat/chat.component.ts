@@ -214,6 +214,13 @@ export class ChatComponent implements OnInit, OnDestroy {
         case 'heartbeat':
           this.lastHeartbeat = Date.now();
           break;
+        case 'connected-users':
+          this.zone.run(() => {
+            if (this.chatService.channelInfo) {
+              this.chatService.channelInfo.connectedUsersAmount = message.count;
+            }
+          });
+          break;
       }
     };
   }

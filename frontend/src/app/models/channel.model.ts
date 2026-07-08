@@ -7,4 +7,5 @@ export interface Channel {
   views?: number;
   require_auth_for_view_files?: boolean;
   contact_us?: string;
+  connectedUsersAmount?: number;
 }
