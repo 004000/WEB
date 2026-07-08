@@ -1,7 +1,8 @@
 .message-card {
   max-width: 80vw;
-  background-color: #f4f4f5 !important;
-  color: #222b45 !important;
+  background-color: var(--background-basic-color-2) !important;
+  color: var(--text-basic-color) !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 nb-icon {
