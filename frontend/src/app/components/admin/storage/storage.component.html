@@ -1,0 +1,57 @@
+<div class="d-flex flex-column gap-3 p-3">
+  <h5>אחסון וגיבוי</h5>
+
+  @if (usage) {
+    <nb-card>
+      <nb-card-body>
+        <div class="d-flex flex-column gap-2">
+          <div>מספר הודעות בערוץ: <strong>{{ usage.messageCount }}</strong></div>
+          <div>נפח בשימוש: <strong>{{ formatBytes(usage.usedBytes) }}</strong>
+            @if (usage.maxBytes) {
+              מתוך <strong>{{ formatBytes(usage.maxBytes) }}</strong>
+              ({{ usage.percentUsed?.toFixed(1) }}%)
+            }
+          </div>
+          <div>תקופת שמירה לפני ניקוי: <strong>{{ usage.retentionDays }} ימים</strong></div>
+          <div>
+            גיבוי אוטומטי ל-GitHub:
+            @if (usage.backupEnabled) {
+              <strong class="text-success">מופעל</strong>
+            } @else {
+              <strong class="text-danger">לא מוגדר</strong> —
+              יש להגדיר את משתני הסביבה GITHUB_BACKUP_TOKEN ו-GITHUB_BACKUP_REPO ברנדר
+            }
+          </div>
+        </div>
+      </nb-card-body>
+    </nb-card>
+  }
+
+  <div>
+    <button nbButton status="warning" [disabled]="isRunning" (click)="runCleanup()">
+      @if (isRunning) {
+        מריץ ניקוי...
+      } @else {
+        הרץ ניקוי עכשיו (גיבוי + מחיקה של הודעות ישנות)
+      }
+    </button>
+  </div>
+
+  @if (lastResult) {
+    <nb-card>
+      <nb-card-header>תוצאת ההרצה האחרונה</nb-card-header>
+      <nb-card-body>
+        <div>הודעות שנמצאו מעל {{ lastResult.retentionDays }} ימים: {{ lastResult.messagesFound }}</div>
+        <div>גיבוי בוצע: {{ lastResult.backedUp ? 'כן' : 'לא' }}</div>
+        @if (lastResult.backupSkipped) {
+          <div class="text-danger">{{ lastResult.backupSkipped }}</div>
+        }
+        <div>הודעות שנמחקו לצמיתות: {{ lastResult.messagesPurged }}</div>
+      </nb-card-body>
+    </nb-card>
+  }
+
+  <small class="text-black-50">
+    הניקוי רץ גם אוטומטית פעם ביום ברקע. אם לא מוגדר גיבוי ל-GitHub, המערכת לעולם לא תמחק הודעות באופן קבוע — רק תסמן אותן כרגיל.
+  </small>
+</div>

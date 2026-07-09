@@ -15,6 +15,23 @@ export interface PrivilegeUser {
   privileges: Record<string, boolean>;
 }
 
+export interface StorageUsage {
+  usedBytes: number;
+  maxBytes: number;
+  messageCount: number;
+  retentionDays: number;
+  backupEnabled: boolean;
+  percentUsed?: number;
+}
+
+export interface CleanupResult {
+  retentionDays: number;
+  messagesFound: number;
+  backedUp: boolean;
+  backupSkipped?: string;
+  messagesPurged: number;
+}
+
 export type EditMsg = {
   new?: boolean;
   isScheduling?: boolean;
@@ -103,6 +120,14 @@ export class AdminService {
         status: status
       }
     }));
+  }
+
+  getStorageUsage(): Promise<StorageUsage> {
+    return firstValueFrom(this.http.get<StorageUsage>('/api/admin/cleanup/storage'));
+  }
+
+  runCleanup(): Promise<CleanupResult> {
+    return firstValueFrom(this.http.post<CleanupResult>('/api/admin/cleanup/run', {}));
   }
 
   setReports(report: Report): Promise<ResponseResult> {

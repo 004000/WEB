@@ -49,6 +49,7 @@ func main() {
 	gob.Register(Session{})
 	initializePrivilegeUsers()
 	go statLogger()
+	startCleanupScheduler()
 
 	var err error
 	store, err = redistore.NewRediStore(10, redisType, redisAddr, "", redisPass, []byte(secretKey))
@@ -116,6 +117,8 @@ func main() {
 				protected.Post("/settings/set", protectedWithPrivilege(Admin, setSettings))
 				protected.Get("/reports/get", protectedWithPrivilege(Admin, getReports))
 				protected.Post("/reports/set", protectedWithPrivilege(Admin, setReports))
+				protected.Post("/cleanup/run", protectedWithPrivilege(Admin, triggerCleanup))
+				protected.Get("/cleanup/storage", protectedWithPrivilege(Admin, getStorageUsage))
 			})
 		})
 	})
