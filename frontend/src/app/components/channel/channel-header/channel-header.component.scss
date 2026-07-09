@@ -37,17 +37,31 @@
     }
 }
 
+.header-row {
+    position: relative;
+    width: 100%;
+}
+
 .header-name-col {
-    flex: 1 1 auto;
-    min-width: 0;
+    flex-shrink: 0;
     white-space: nowrap;
     overflow: hidden;
+    max-width: 40%;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    margin-inline-start: auto;
 }
 
 .search-bar-wrapper {
-    position: relative;
-    flex: 0 0 auto;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     width: 260px;
+    max-width: 40vw;
 }
 
 .search-bar {

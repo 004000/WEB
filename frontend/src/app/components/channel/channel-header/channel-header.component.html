@@ -1,4 +1,4 @@
-<div class="d-flex flex-row gap-2 align-items-center">
+<div class="d-flex flex-row gap-2 align-items-center header-row">
   <div class="bg-light rounded-circle d-flex align-items-center justify-content-center"
     style="width: 60px; height: 60px">
     @if (chatService.channelInfo?.logoUrl?.length) {
@@ -63,33 +63,36 @@
     }
   </div>
 
-  @if (chatService.channelInfo?.contact_us) {
-    <button nbButton shape="round" class="m-2" title="צור קשר" (click)="openContactUs()" status="info">
-      <nb-icon icon="email-outline"></nb-icon>
-    </button>
-  }
+  <div class="header-actions">
+    @if (chatService.channelInfo?.contact_us) {
+      <button nbButton shape="round" class="m-2" title="צור קשר" (click)="openContactUs()" status="info">
+        <nb-icon icon="email-outline"></nb-icon>
+      </button>
+    }
 
-  <button nbButton shape="round" class="m-2" [title]="isDarkMode ? 'מצב בהיר' : 'מצב חושך'"
-    (click)="toggleDarkMode()" status="basic">
-    <nb-icon [icon]="isDarkMode ? 'sun-outline' : 'moon-outline'"></nb-icon>
-  </button>
-
-  @if (notificationsService.initialized) {
-    <button nbButton shape="round" class="m-2" title="התראות" status="danger"
-      (click)="notificationsService.requestPermission()">
-      <nb-icon icon="bell"></nb-icon>
+    <button nbButton shape="round" class="m-2" [title]="isDarkMode ? 'מצב בהיר' : 'מצב חושך'"
+      (click)="toggleDarkMode()" status="basic">
+      <nb-icon [icon]="isDarkMode ? 'sun-outline' : 'moon-outline'"></nb-icon>
     </button>
-  }
 
-  @if (userInfo) {
-    <nb-user [name]="userInfo.username" shape="round" [nbContextMenu]="userMenu" [nbContextMenuTag]="userMenuTag"
-      [picture]="userInfo.picture || ''" [onlyPicture]="isSmallScreen">
-    </nb-user>
-  } @else {
-    <button nbButton shape="round" appearance="outline" title="התחבר באמצעות חשבון גוגל"
-      (click)="_authService.loginWithGoogle()">
-      <nb-icon icon="google"></nb-icon>
-      התחבר
-    </button>
-  }
+    @if (notificationsService.initialized) {
+      <button nbButton shape="round" class="m-2" title="התראות" status="danger"
+        (click)="notificationsService.requestPermission()">
+        <nb-icon icon="bell"></nb-icon>
+      </button>
+    }
+
+    @if (userInfo) {
+      <nb-user [name]="userInfo.username" shape="round" [nbContextMenu]="userMenu" [nbContextMenuTag]="userMenuTag"
+        [picture]="userInfo.picture || ''" [onlyPicture]="isSmallScreen">
+      </nb-user>
+    } @else {
+      <button nbButton shape="round" appearance="outline" title="התחבר באמצעות חשבון גוגל"
+        (click)="_authService.loginWithGoogle()">
+        <nb-icon icon="google"></nb-icon>
+        התחבר
+      </button>
+    }
+  </div>
 </div>
+
