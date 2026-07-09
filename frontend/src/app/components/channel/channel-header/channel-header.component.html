@@ -11,7 +11,7 @@
       </div>
     }
   </div>
-  <div class="d-flex flex-column flex-grow-1">
+  <div class="d-flex flex-column header-name-col">
     <span class="fs-4 my-2 fw-bold">{{ chatService.channelInfo?.name }}</span>
     @if (chatService.channelInfo?.description) {
       <small>
@@ -29,6 +29,38 @@
         </div>
       }
     </div>
+  </div>
+
+  <div class="search-bar-wrapper">
+    <div class="search-bar">
+      <input type="text" class="search-input" placeholder="חיפוש..." [ngModel]="chatService.searchQuery"
+        (ngModelChange)="chatService.onSearchInput($event)" />
+      @if (chatService.searchQuery) {
+        <nb-icon icon="close-outline" class="search-clear-icon" (click)="chatService.closeSearch()"></nb-icon>
+      } @else {
+        <nb-icon icon="search-outline" class="search-icon"></nb-icon>
+      }
+    </div>
+
+    @if (chatService.searchQuery.trim().length >= 2) {
+      <div class="search-results">
+        @if (chatService.isSearching) {
+          <div class="search-status">מחפש...</div>
+        } @else if (chatService.searchResults.length === 0) {
+          <div class="search-status">לא נמצאו תוצאות</div>
+        } @else {
+          @for (result of chatService.searchResults; track result.id) {
+            <div class="search-result-item" (click)="chatService.selectSearchResult(result)">
+              <div class="search-result-header">
+                <span class="search-result-author">{{ result.author }}</span>
+                <span class="search-result-time">{{ result.timestamp | messageTime }}</span>
+              </div>
+              <div class="search-result-text">{{ result.text }}</div>
+            </div>
+          }
+        }
+      </div>
+    }
   </div>
 
   @if (chatService.channelInfo?.contact_us) {
@@ -59,37 +91,5 @@
       <nb-icon icon="google"></nb-icon>
       התחבר
     </button>
-  }
-</div>
-
-<div class="search-bar-wrapper">
-  <div class="search-bar">
-    <input type="text" class="search-input" placeholder="חיפוש..." [ngModel]="chatService.searchQuery"
-      (ngModelChange)="chatService.onSearchInput($event)" />
-    @if (chatService.searchQuery) {
-      <nb-icon icon="close-outline" class="search-clear-icon" (click)="chatService.closeSearch()"></nb-icon>
-    } @else {
-      <nb-icon icon="search-outline" class="search-icon"></nb-icon>
-    }
-  </div>
-
-  @if (chatService.searchQuery.trim().length >= 2) {
-    <div class="search-results">
-      @if (chatService.isSearching) {
-        <div class="search-status">מחפש...</div>
-      } @else if (chatService.searchResults.length === 0) {
-        <div class="search-status">לא נמצאו תוצאות</div>
-      } @else {
-        @for (result of chatService.searchResults; track result.id) {
-          <div class="search-result-item" (click)="chatService.selectSearchResult(result)">
-            <div class="search-result-header">
-              <span class="search-result-author">{{ result.author }}</span>
-              <span class="search-result-time">{{ result.timestamp | messageTime }}</span>
-            </div>
-            <div class="search-result-text">{{ result.text }}</div>
-          </div>
-        }
-      }
-    </div>
   }
 </div>

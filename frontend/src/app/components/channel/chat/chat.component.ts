@@ -104,7 +104,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (element) {
       element.scrollIntoView({ behavior: opt.smooth ? 'smooth' : 'instant', block: 'center' });
       this.removeMsgMarked();
-      opt.mark && element.classList.add('mark_message');
+      if (opt.mark) {
+        const card = element.querySelector('.message-card') as HTMLElement | null;
+        (card || element).classList.add('mark_message');
+      }
     } else {
       this.loadMessages({ scrollDown: false, messageId: opt.messageId, mark: opt.mark });
     }

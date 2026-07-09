@@ -37,18 +37,23 @@
     }
 }
 
+.header-name-col {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 .search-bar-wrapper {
     position: relative;
-    margin-top: 10px;
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .search-bar {
     display: flex;
     align-items: center;
     background: var(--background-basic-color-2);
-    border-radius: 20px;
-    padding: 8px 16px;
+    border-radius: 18px;
+    padding: 6px 14px;
     gap: 8px;
 }
 
