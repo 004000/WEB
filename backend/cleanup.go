@@ -29,12 +29,16 @@ func getRetentionDays() int {
 
 // getEmergencyThresholdPercent is the storage usage percentage above which the
 // emergency cleanup starts purging the oldest messages, regardless of their age.
+// Preference order: value saved by an admin in the settings panel, then the
+// STORAGE_EMERGENCY_THRESHOLD_PERCENT env var, then a default of 80%.
 func getEmergencyThresholdPercent() float64 {
-	v, err := strconv.ParseFloat(os.Getenv("STORAGE_EMERGENCY_THRESHOLD_PERCENT"), 64)
-	if err != nil || v <= 0 || v > 100 {
-		return 80
+	if settingConfig != nil && settingConfig.StorageEmergencyThresholdPercent > 0 && settingConfig.StorageEmergencyThresholdPercent <= 100 {
+		return settingConfig.StorageEmergencyThresholdPercent
 	}
-	return v
+	if v, err := strconv.ParseFloat(os.Getenv("STORAGE_EMERGENCY_THRESHOLD_PERCENT"), 64); err == nil && v > 0 && v <= 100 {
+		return v
+	}
+	return 80
 }
 
 type CleanupResult struct {
@@ -262,6 +266,47 @@ func backupToGithub(ctx context.Context, messages []Message, reasonLabel string)
 	}
 
 	return nil
+}
+
+func setEmergencyThreshold(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var body struct {
+		Value float64 `json:"value"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Value <= 0 || body.Value > 100 {
+		http.Error(w, "invalid value, expected a number between 1 and 100", http.StatusBadRequest)
+		return
+	}
+
+	existing, err := dbGetSettings(ctx)
+	if err != nil {
+		http.Error(w, "error loading settings", http.StatusInternalServerError)
+		return
+	}
+
+	found := false
+	for i := range existing {
+		if existing[i].Key == "storage_emergency_threshold" {
+			existing[i].Value = body.Value
+			found = true
+			break
+		}
+	}
+	if !found {
+		existing = append(existing, Setting{Key: "storage_emergency_threshold", Value: body.Value})
+	}
+
+	if err := dbSetSettings(ctx, &existing); err != nil {
+		http.Error(w, "error saving settings", http.StatusInternalServerError)
+		return
+	}
+
+	settingConfig = existing.ToConfig()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]float64{"value": body.Value})
 }
 
 func triggerCleanup(w http.ResponseWriter, r *http.Request) {

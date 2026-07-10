@@ -41,6 +41,7 @@ type SettingConfig struct {
 	MaxFileSize             int64
 	CustomTitle             string
 	ContactUs               string
+	StorageEmergencyThresholdPercent float64
 }
 
 type Setting struct {
@@ -186,6 +187,9 @@ func (s *Settings) ToConfig() *SettingConfig {
 
 		case "contact_us":
 			config.ContactUs = setting.GetString()
+
+		case "storage_emergency_threshold":
+			config.StorageEmergencyThresholdPercent = setting.GetFloat()
 		}
 	}
 
@@ -205,6 +209,11 @@ func (s *Setting) GetString() string {
 func (s *Setting) GetInt() int64 {
 	i, _ := dyno.GetInteger(s.Value)
 	return i
+}
+
+func (s *Setting) GetFloat() float64 {
+	f, _ := dyno.GetFloating(s.Value)
+	return f
 }
 
 func setSettings(w http.ResponseWriter, r *http.Request) {

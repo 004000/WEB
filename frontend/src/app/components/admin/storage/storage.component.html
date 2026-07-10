@@ -14,10 +14,6 @@
           </div>
           <div>תקופת שמירה לפני ניקוי רגיל: <strong>{{ usage.retentionDays }} ימים</strong></div>
           <div>
-            סף חירום למחיקת ההודעות הישנות ביותר (ללא קשר לגיל): <strong>{{ usage.emergencyThreshold }}%</strong>
-            תפוסה — נבדק אוטומטית כל שעה.
-          </div>
-          <div>
             גיבוי אוטומטי ל-GitHub:
             @if (usage.backupEnabled) {
               <strong class="text-success">מופעל</strong>
@@ -30,6 +26,38 @@
       </nb-card-body>
     </nb-card>
   }
+
+  <nb-card>
+    <nb-card-header>סף חירום למחיקת הודעות ישנות</nb-card-header>
+    <nb-card-body>
+      <p class="text-black-50 mb-3">
+        נבדק אוטומטית כל שעה. ברגע שהתפוסה עוברת את האחוז שנבחר, המערכת מוחקת את ההודעות הישנות ביותר
+        (ללא קשר לגיל שלהן) עד שהתפוסה יורדת מתחת לסף — כדי שהערוץ לא "יתמלא".
+      </p>
+
+      <div class="threshold-slider-wrapper">
+        <input type="range" class="threshold-slider" min="50" max="95" step="5" [(ngModel)]="selectedThreshold" />
+        <div class="threshold-marks">
+          @for (val of thresholdOptions; track val) {
+            <span class="threshold-mark" [class.active]="selectedThreshold === val" (click)="selectedThreshold = val">
+              {{ val }}%
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="d-flex flex-row align-items-center gap-3 mt-3">
+        <span>הערך שנבחר: <strong>{{ selectedThreshold }}%</strong></span>
+        <button nbButton status="primary" size="small" [disabled]="isSavingThreshold" (click)="saveThreshold()">
+          @if (isSavingThreshold) {
+            שומר...
+          } @else {
+            שמור
+          }
+        </button>
+      </div>
+    </nb-card-body>
+  </nb-card>
 
   <div class="d-flex flex-row gap-2 flex-wrap">
     <button nbButton status="warning" [disabled]="isRunning" (click)="runCleanup()">
@@ -65,8 +93,7 @@
   }
 
   <small class="text-black-50">
-    יש שני מנגנוני הגנה שרצים אוטומטית ברקע: ניקוי יומי לפי גיל ההודעות, וניקוי חירום שבודק כל שעה את אחוז התפוסה
-    ומוחק את ההודעות הישנות ביותר אם עוברים את סף החירום — כדי שהערוץ לא "יתמלא" גם אם קצב הפרסום מהיר.
+    יש שני מנגנוני הגנה שרצים אוטומטית ברקע: ניקוי יומי לפי גיל ההודעות, וניקוי חירום שבודק כל שעה את אחוז התפוסה.
     בשני המקרים, אם לא מוגדר גיבוי ל-GitHub, המערכת לעולם לא תמחק הודעות לצמיתות.
   </small>
 </div>

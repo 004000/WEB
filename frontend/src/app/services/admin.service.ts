@@ -136,6 +136,10 @@ export class AdminService {
     return firstValueFrom(this.http.post<CleanupResult>('/api/admin/cleanup/run-emergency', {}));
   }
 
+  setEmergencyThreshold(value: number): Promise<{ value: number }> {
+    return firstValueFrom(this.http.post<{ value: number }>('/api/admin/cleanup/threshold', { value }));
+  }
+
   setReports(report: Report): Promise<ResponseResult> {
     return firstValueFrom(this.http.post<ResponseResult>('/api/admin/reports/set', report));
   }

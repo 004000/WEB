@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { NbButtonModule, NbCardModule, NbToastrService } from "@nebular/theme";
 import { AdminService, StorageUsage, CleanupResult } from '../../../services/admin.service';
 
@@ -7,6 +8,7 @@ import { AdminService, StorageUsage, CleanupResult } from '../../../services/adm
   imports: [
     NbCardModule,
     NbButtonModule,
+    FormsModule,
   ],
   templateUrl: './storage.component.html',
   styleUrl: './storage.component.scss'
@@ -15,7 +17,11 @@ export class StorageComponent implements OnInit {
   usage: StorageUsage | null = null;
   isRunning = false;
   isRunningEmergency = false;
+  isSavingThreshold = false;
   lastResult: CleanupResult | null = null;
+
+  thresholdOptions = [60, 70, 80, 90, 95];
+  selectedThreshold = 80;
 
   constructor(
     private adminService: AdminService,
@@ -28,7 +34,10 @@ export class StorageComponent implements OnInit {
 
   loadUsage() {
     this.adminService.getStorageUsage()
-      .then(usage => this.usage = usage)
+      .then(usage => {
+        this.usage = usage;
+        this.selectedThreshold = usage.emergencyThreshold;
+      })
       .catch(() => this.toastrService.danger('', 'שגיאה בטעינת נתוני האחסון'));
   }
 
@@ -36,6 +45,17 @@ export class StorageComponent implements OnInit {
     if (!bytes) return '0 MB';
     const mb = bytes / (1024 * 1024);
     return `${mb.toFixed(2)} MB`;
+  }
+
+  saveThreshold() {
+    this.isSavingThreshold = true;
+    this.adminService.setEmergencyThreshold(this.selectedThreshold)
+      .then(() => {
+        this.toastrService.success('', `סף החירום עודכן ל-${this.selectedThreshold}%`);
+        this.loadUsage();
+      })
+      .catch(() => this.toastrService.danger('', 'עדכון הסף נכשל'))
+      .finally(() => this.isSavingThreshold = false);
   }
 
   private showResultToast(result: CleanupResult, emergencyLabel: boolean) {

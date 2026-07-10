@@ -120,6 +120,7 @@ func main() {
 				protected.Post("/cleanup/run", protectedWithPrivilege(Admin, triggerCleanup))
 				protected.Post("/cleanup/run-emergency", protectedWithPrivilege(Admin, triggerEmergencyCleanup))
 				protected.Get("/cleanup/storage", protectedWithPrivilege(Admin, getStorageUsage))
+				protected.Post("/cleanup/threshold", protectedWithPrivilege(Admin, setEmergencyThreshold))
 			})
 		})
 	})
