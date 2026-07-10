@@ -20,12 +20,14 @@ export interface StorageUsage {
   maxBytes: number;
   messageCount: number;
   retentionDays: number;
+  emergencyThreshold: number;
   backupEnabled: boolean;
-  percentUsed?: number;
+  percentUsed: number;
 }
 
 export interface CleanupResult {
-  retentionDays: number;
+  reason: string;
+  retentionDays?: number;
   messagesFound: number;
   backedUp: boolean;
   backupSkipped?: string;
@@ -128,6 +130,10 @@ export class AdminService {
 
   runCleanup(): Promise<CleanupResult> {
     return firstValueFrom(this.http.post<CleanupResult>('/api/admin/cleanup/run', {}));
+  }
+
+  runEmergencyCleanup(): Promise<CleanupResult> {
+    return firstValueFrom(this.http.post<CleanupResult>('/api/admin/cleanup/run-emergency', {}));
   }
 
   setReports(report: Report): Promise<ResponseResult> {

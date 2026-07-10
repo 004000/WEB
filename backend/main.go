@@ -118,6 +118,7 @@ func main() {
 				protected.Get("/reports/get", protectedWithPrivilege(Admin, getReports))
 				protected.Post("/reports/set", protectedWithPrivilege(Admin, setReports))
 				protected.Post("/cleanup/run", protectedWithPrivilege(Admin, triggerCleanup))
+				protected.Post("/cleanup/run-emergency", protectedWithPrivilege(Admin, triggerEmergencyCleanup))
 				protected.Get("/cleanup/storage", protectedWithPrivilege(Admin, getStorageUsage))
 			})
 		})

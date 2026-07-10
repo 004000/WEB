@@ -27,17 +27,71 @@ func getRetentionDays() int {
 	return days
 }
 
+// getEmergencyThresholdPercent is the storage usage percentage above which the
+// emergency cleanup starts purging the oldest messages, regardless of their age.
+func getEmergencyThresholdPercent() float64 {
+	v, err := strconv.ParseFloat(os.Getenv("STORAGE_EMERGENCY_THRESHOLD_PERCENT"), 64)
+	if err != nil || v <= 0 || v > 100 {
+		return 80
+	}
+	return v
+}
+
 type CleanupResult struct {
-	RetentionDays  int    `json:"retentionDays"`
+	Reason         string `json:"reason"`
+	RetentionDays  int    `json:"retentionDays,omitempty"`
 	MessagesFound  int    `json:"messagesFound"`
 	BackedUp       bool   `json:"backedUp"`
 	BackupSkipped  string `json:"backupSkipped,omitempty"`
 	MessagesPurged int    `json:"messagesPurged"`
 }
 
-// runCleanup finds messages older than the retention period, optionally backs them up
-// to a GitHub repo, and only then permanently deletes them from Redis.
-// If a backup is configured but fails, deletion is aborted for safety.
+type StorageUsageResult struct {
+	UsedBytes          int64   `json:"usedBytes"`
+	MaxBytes           int64   `json:"maxBytes"`
+	PercentUsed        float64 `json:"percentUsed"`
+	MessageCount       int64   `json:"messageCount"`
+	RetentionDays      int     `json:"retentionDays"`
+	EmergencyThreshold float64 `json:"emergencyThreshold"`
+	BackupEnabled      bool    `json:"backupEnabled"`
+}
+
+func fetchStorageUsage(ctx context.Context) (*StorageUsageResult, error) {
+	info, err := rdb.Info(ctx, "memory").Result()
+	if err != nil {
+		return nil, err
+	}
+
+	usedBytes := int64(0)
+	maxBytes := int64(0)
+	for _, line := range strings.Split(info, "\r\n") {
+		if strings.HasPrefix(line, "used_memory:") {
+			usedBytes, _ = strconv.ParseInt(strings.TrimPrefix(line, "used_memory:"), 10, 64)
+		}
+		if strings.HasPrefix(line, "maxmemory:") {
+			maxBytes, _ = strconv.ParseInt(strings.TrimPrefix(line, "maxmemory:"), 10, 64)
+		}
+	}
+
+	messageCount, _ := rdb.ZCard(ctx, "m_times:1").Result()
+
+	result := &StorageUsageResult{
+		UsedBytes:          usedBytes,
+		MaxBytes:           maxBytes,
+		MessageCount:       messageCount,
+		RetentionDays:      getRetentionDays(),
+		EmergencyThreshold: getEmergencyThresholdPercent(),
+		BackupEnabled:      githubBackupToken != "" && githubBackupRepo != "",
+	}
+	if maxBytes > 0 {
+		result.PercentUsed = float64(usedBytes) / float64(maxBytes) * 100
+	}
+	return result, nil
+}
+
+// runCleanup finds messages older than the retention period, backs them up to
+// GitHub, and only then permanently deletes them from Redis. If backup is not
+// configured or fails, no deletion happens.
 func runCleanup(ctx context.Context) (*CleanupResult, error) {
 	retentionDays := getRetentionDays()
 	cutoff := time.Now().AddDate(0, 0, -retentionDays)
@@ -50,14 +104,71 @@ func runCleanup(ctx context.Context) (*CleanupResult, error) {
 		return nil, fmt.Errorf("failed to list old messages: %v", err)
 	}
 
-	result := &CleanupResult{RetentionDays: retentionDays, MessagesFound: len(oldKeys)}
-
+	result := &CleanupResult{Reason: "age", RetentionDays: retentionDays, MessagesFound: len(oldKeys)}
 	if len(oldKeys) == 0 {
 		return result, nil
 	}
 
-	messages := make([]Message, 0, len(oldKeys))
-	for _, key := range oldKeys {
+	return backupAndPurgeKeys(ctx, oldKeys, result, fmt.Sprintf("messages older than %d days", retentionDays))
+}
+
+// runEmergencyCleanup purges the oldest messages (regardless of age) whenever
+// storage usage is above the configured threshold, freeing roughly enough
+// space to drop back under it. It repeats in batches until usage is back
+// under the threshold, there are no more messages, or a backup fails.
+func runEmergencyCleanup(ctx context.Context) (*CleanupResult, error) {
+	usage, err := fetchStorageUsage(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read storage usage: %v", err)
+	}
+
+	result := &CleanupResult{Reason: "emergency-storage-threshold"}
+
+	if usage.MaxBytes == 0 || usage.PercentUsed < usage.EmergencyThreshold {
+		return result, nil
+	}
+
+	const batchSize = 100
+	const maxBatches = 20 // safety cap so we never loop forever in one run
+
+	for i := 0; i < maxBatches; i++ {
+		oldestKeys, err := rdb.ZRange(ctx, "m_times:1", 0, batchSize-1).Result()
+		if err != nil {
+			return result, fmt.Errorf("failed to list oldest messages: %v", err)
+		}
+		if len(oldestKeys) == 0 {
+			break
+		}
+
+		result.MessagesFound += len(oldestKeys)
+		batchResult := &CleanupResult{Reason: result.Reason}
+		if _, err := backupAndPurgeKeys(ctx, oldestKeys, batchResult, "oldest messages (storage near capacity)"); err != nil {
+			result.BackupSkipped = batchResult.BackupSkipped
+			return result, err
+		}
+		result.BackedUp = result.BackedUp || batchResult.BackedUp
+		result.MessagesPurged += batchResult.MessagesPurged
+		result.BackupSkipped = batchResult.BackupSkipped
+
+		if batchResult.MessagesPurged == 0 {
+			// Backup not configured, nothing more we can safely do.
+			break
+		}
+
+		usage, err = fetchStorageUsage(ctx)
+		if err != nil || usage.PercentUsed < usage.EmergencyThreshold {
+			break
+		}
+	}
+
+	return result, nil
+}
+
+// backupAndPurgeKeys backs up the messages for the given Redis keys to GitHub
+// (if configured) and, only on backup success, permanently deletes them.
+func backupAndPurgeKeys(ctx context.Context, keys []string, result *CleanupResult, reasonLabel string) (*CleanupResult, error) {
+	messages := make([]Message, 0, len(keys))
+	for _, key := range keys {
 		data, err := rdb.HGetAll(ctx, key).Result()
 		if err != nil || len(data) == 0 {
 			continue
@@ -70,13 +181,17 @@ func runCleanup(ctx context.Context) (*CleanupResult, error) {
 		return result, nil
 	}
 
-	if err := backupToGithub(ctx, messages, retentionDays); err != nil {
+	if len(messages) == 0 {
+		return result, nil
+	}
+
+	if err := backupToGithub(ctx, messages, reasonLabel); err != nil {
 		return result, fmt.Errorf("backup failed, deletion aborted for safety: %v", err)
 	}
 	result.BackedUp = true
 
 	pipe := rdb.Pipeline()
-	for _, key := range oldKeys {
+	for _, key := range keys {
 		idStr := strings.TrimPrefix(key, "messages:")
 		pipe.Del(ctx, key)
 		pipe.Del(ctx, fmt.Sprintf("message:%s:reactions", idStr))
@@ -85,7 +200,7 @@ func runCleanup(ctx context.Context) (*CleanupResult, error) {
 	if _, err := pipe.Exec(ctx); err != nil {
 		return result, fmt.Errorf("backup succeeded but deletion failed: %v", err)
 	}
-	result.MessagesPurged = len(oldKeys)
+	result.MessagesPurged += len(keys)
 
 	return result, nil
 }
@@ -112,7 +227,7 @@ func messageFromHash(data map[string]string) Message {
 
 // backupToGithub creates a new file in the configured backup repo containing the
 // given messages as JSON, using the GitHub Contents API.
-func backupToGithub(ctx context.Context, messages []Message, retentionDays int) error {
+func backupToGithub(ctx context.Context, messages []Message, reasonLabel string) error {
 	payload, err := json.MarshalIndent(messages, "", "  ")
 	if err != nil {
 		return err
@@ -122,7 +237,7 @@ func backupToGithub(ctx context.Context, messages []Message, retentionDays int) 
 	url := fmt.Sprintf("https://api.github.com/repos/%s/contents/%s", githubBackupRepo, path)
 
 	body := map[string]string{
-		"message": fmt.Sprintf("Backup %d messages older than %d days", len(messages), retentionDays),
+		"message": fmt.Sprintf("Backup %d %s", len(messages), reasonLabel),
 		"content": base64.StdEncoding.EncodeToString(payload),
 	}
 	bodyJSON, _ := json.Marshal(body)
@@ -166,50 +281,44 @@ func triggerCleanup(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
+func triggerEmergencyCleanup(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	result, err := runEmergencyCleanup(ctx)
+	w.Header().Set("Content-Type", "application/json")
+
+	if err != nil {
+		log.Printf("Manual emergency cleanup failed: %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	json.NewEncoder(w).Encode(result)
+}
+
 func getStorageUsage(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	w.Header().Set("Content-Type", "application/json")
 
-	info, err := rdb.Info(ctx, "memory").Result()
+	usage, err := fetchStorageUsage(ctx)
 	if err != nil {
 		http.Error(w, "error", http.StatusInternalServerError)
 		return
 	}
 
-	usedBytes := int64(0)
-	maxBytes := int64(0)
-	for _, line := range strings.Split(info, "\r\n") {
-		if strings.HasPrefix(line, "used_memory:") {
-			usedBytes, _ = strconv.ParseInt(strings.TrimPrefix(line, "used_memory:"), 10, 64)
-		}
-		if strings.HasPrefix(line, "maxmemory:") {
-			maxBytes, _ = strconv.ParseInt(strings.TrimPrefix(line, "maxmemory:"), 10, 64)
-		}
-	}
-
-	messageCount, _ := rdb.ZCard(ctx, "m_times:1").Result()
-
-	response := map[string]interface{}{
-		"usedBytes":     usedBytes,
-		"maxBytes":      maxBytes,
-		"messageCount":  messageCount,
-		"retentionDays": getRetentionDays(),
-		"backupEnabled": githubBackupToken != "" && githubBackupRepo != "",
-	}
-	if maxBytes > 0 {
-		response["percentUsed"] = float64(usedBytes) / float64(maxBytes) * 100
-	}
-
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(usage)
 }
 
-// startCleanupScheduler runs the cleanup job once per day in the background.
+// startCleanupScheduler runs the age-based cleanup once per day, and checks
+// storage usage every hour to trigger an emergency cleanup if needed.
 func startCleanupScheduler() {
-	ticker := time.NewTicker(24 * time.Hour)
+	dailyTicker := time.NewTicker(24 * time.Hour)
 	go func() {
-		for range ticker.C {
+		for range dailyTicker.C {
 			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			result, err := runCleanup(ctx)
 			cancel()
@@ -217,6 +326,20 @@ func startCleanupScheduler() {
 				log.Printf("Scheduled cleanup failed: %v\n", err)
 			} else if result.MessagesPurged > 0 {
 				log.Printf("Scheduled cleanup: backed up and purged %d messages older than %d days\n", result.MessagesPurged, result.RetentionDays)
+			}
+		}
+	}()
+
+	hourlyTicker := time.NewTicker(1 * time.Hour)
+	go func() {
+		for range hourlyTicker.C {
+			ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+			result, err := runEmergencyCleanup(ctx)
+			cancel()
+			if err != nil {
+				log.Printf("Emergency cleanup failed: %v\n", err)
+			} else if result.MessagesPurged > 0 {
+				log.Printf("Emergency cleanup: storage was near capacity, backed up and purged %d oldest messages\n", result.MessagesPurged)
 			}
 		}
 	}()

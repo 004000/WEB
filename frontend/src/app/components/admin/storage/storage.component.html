@@ -9,10 +9,14 @@
           <div>נפח בשימוש: <strong>{{ formatBytes(usage.usedBytes) }}</strong>
             @if (usage.maxBytes) {
               מתוך <strong>{{ formatBytes(usage.maxBytes) }}</strong>
-              ({{ usage.percentUsed?.toFixed(1) }}%)
+              (<strong [class.text-danger]="usage.percentUsed >= usage.emergencyThreshold">{{ usage.percentUsed.toFixed(1) }}%</strong>)
             }
           </div>
-          <div>תקופת שמירה לפני ניקוי: <strong>{{ usage.retentionDays }} ימים</strong></div>
+          <div>תקופת שמירה לפני ניקוי רגיל: <strong>{{ usage.retentionDays }} ימים</strong></div>
+          <div>
+            סף חירום למחיקת ההודעות הישנות ביותר (ללא קשר לגיל): <strong>{{ usage.emergencyThreshold }}%</strong>
+            תפוסה — נבדק אוטומטית כל שעה.
+          </div>
           <div>
             גיבוי אוטומטי ל-GitHub:
             @if (usage.backupEnabled) {
@@ -27,12 +31,20 @@
     </nb-card>
   }
 
-  <div>
+  <div class="d-flex flex-row gap-2 flex-wrap">
     <button nbButton status="warning" [disabled]="isRunning" (click)="runCleanup()">
       @if (isRunning) {
         מריץ ניקוי...
       } @else {
-        הרץ ניקוי עכשיו (גיבוי + מחיקה של הודעות ישנות)
+        הרץ ניקוי רגיל (לפי גיל הודעות)
+      }
+    </button>
+
+    <button nbButton status="danger" [disabled]="isRunningEmergency" (click)="runEmergencyCleanup()">
+      @if (isRunningEmergency) {
+        מריץ ניקוי חירום...
+      } @else {
+        הרץ ניקוי חירום (לפי תפוסה)
       }
     </button>
   </div>
@@ -41,7 +53,8 @@
     <nb-card>
       <nb-card-header>תוצאת ההרצה האחרונה</nb-card-header>
       <nb-card-body>
-        <div>הודעות שנמצאו מעל {{ lastResult.retentionDays }} ימים: {{ lastResult.messagesFound }}</div>
+        <div>סוג ניקוי: {{ lastResult.reason === 'age' ? 'לפי גיל הודעות' : 'חירום (לפי תפוסה)' }}</div>
+        <div>הודעות שנמצאו: {{ lastResult.messagesFound }}</div>
         <div>גיבוי בוצע: {{ lastResult.backedUp ? 'כן' : 'לא' }}</div>
         @if (lastResult.backupSkipped) {
           <div class="text-danger">{{ lastResult.backupSkipped }}</div>
@@ -52,6 +65,8 @@
   }
 
   <small class="text-black-50">
-    הניקוי רץ גם אוטומטית פעם ביום ברקע. אם לא מוגדר גיבוי ל-GitHub, המערכת לעולם לא תמחק הודעות באופן קבוע — רק תסמן אותן כרגיל.
+    יש שני מנגנוני הגנה שרצים אוטומטית ברקע: ניקוי יומי לפי גיל ההודעות, וניקוי חירום שבודק כל שעה את אחוז התפוסה
+    ומוחק את ההודעות הישנות ביותר אם עוברים את סף החירום — כדי שהערוץ לא "יתמלא" גם אם קצב הפרסום מהיר.
+    בשני המקרים, אם לא מוגדר גיבוי ל-GitHub, המערכת לעולם לא תמחק הודעות לצמיתות.
   </small>
 </div>

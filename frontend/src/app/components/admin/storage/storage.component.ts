@@ -14,6 +14,7 @@ import { AdminService, StorageUsage, CleanupResult } from '../../../services/adm
 export class StorageComponent implements OnInit {
   usage: StorageUsage | null = null;
   isRunning = false;
+  isRunningEmergency = false;
   lastResult: CleanupResult | null = null;
 
   constructor(
@@ -37,21 +38,37 @@ export class StorageComponent implements OnInit {
     return `${mb.toFixed(2)} MB`;
   }
 
+  private showResultToast(result: CleanupResult, emergencyLabel: boolean) {
+    if (result.messagesPurged > 0) {
+      this.toastrService.success('', `נמחקו לצמיתות ${result.messagesPurged} הודעות ${emergencyLabel ? 'ישנות (חירום)' : 'ישנות'}`);
+    } else if (result.backupSkipped) {
+      this.toastrService.warning('', 'הגיבוי לא הוגדר, לא בוצעה מחיקה');
+    } else {
+      this.toastrService.success('', 'אין הודעות למחיקה כרגע');
+    }
+  }
+
   runCleanup() {
     this.isRunning = true;
     this.adminService.runCleanup()
       .then(result => {
         this.lastResult = result;
-        if (result.messagesPurged > 0) {
-          this.toastrService.success('', `נמחקו לצמיתות ${result.messagesPurged} הודעות ישנות`);
-        } else if (result.backupSkipped) {
-          this.toastrService.warning('', 'הגיבוי לא הוגדר, לא בוצעה מחיקה');
-        } else {
-          this.toastrService.success('', 'אין הודעות ישנות למחיקה כרגע');
-        }
+        this.showResultToast(result, false);
         this.loadUsage();
       })
       .catch(() => this.toastrService.danger('', 'הניקוי נכשל'))
       .finally(() => this.isRunning = false);
+  }
+
+  runEmergencyCleanup() {
+    this.isRunningEmergency = true;
+    this.adminService.runEmergencyCleanup()
+      .then(result => {
+        this.lastResult = result;
+        this.showResultToast(result, true);
+        this.loadUsage();
+      })
+      .catch(() => this.toastrService.danger('', 'ניקוי החירום נכשל'))
+      .finally(() => this.isRunningEmergency = false);
   }
 }
