@@ -50,7 +50,7 @@ func getChannelInfo(w http.ResponseWriter, r *http.Request) {
 	channel.LogoUrl = c["logoUrl"]
 	channel.RequireAuthForViewFiles = settingConfig.RequireAuthForViewFiles
 	channel.ContactUs = settingConfig.ContactUs
-	channel.ConnectedUsersAmount = openSSEConnections.Load()
+	channel.ConnectedUsersAmount = getLiveConnectionCount(ctx)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(channel)

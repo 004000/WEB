@@ -183,11 +183,16 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 	}
 	flusher.Flush()
 
-	go increaseCounterSSE()
-	defer decreaseCounterSSE()
-
 	connectionId := registerConnectedUser(r)
-	defer unregisterConnectedUser(connectionId)
+	go func() {
+		increaseCounterSSE()
+		broadcastLiveConnectionCount()
+	}()
+	defer func() {
+		unregisterConnectedUser(connectionId)
+		decreaseCounterSSE()
+		broadcastLiveConnectionCount()
+	}()
 
 	pubsub := rdb.Subscribe(r.Context(), "events")
 	defer pubsub.Close()

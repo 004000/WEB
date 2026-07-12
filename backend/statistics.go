@@ -46,7 +46,6 @@ func statLogger() {
 
 func increaseCounterSSE() {
 	new := openSSEConnections.Add(1)
-	broadcastConnectedUsers(new)
 
 	peakMu.Lock()
 	defer peakMu.Unlock()
@@ -59,21 +58,7 @@ func increaseCounterSSE() {
 }
 
 func decreaseCounterSSE() {
-	new := openSSEConnections.Add(-1)
-	broadcastConnectedUsers(new)
-}
-
-func broadcastConnectedUsers(count int64) {
-	payload, err := json.Marshal(struct {
-		Type  string `json:"type"`
-		Count int64  `json:"count"`
-	}{Type: "connected-users", Count: count})
-	if err != nil {
-		return
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	rdb.Publish(ctx, "events", payload)
+	openSSEConnections.Add(-1)
 }
 
 func getStatistics(w http.ResponseWriter, r *http.Request) {
