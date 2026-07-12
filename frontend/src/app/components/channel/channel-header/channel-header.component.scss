@@ -155,4 +155,11 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     color: var(--text-basic-color, inherit);
+
+    ::ng-deep mark {
+        background: #ffe58a;
+        color: #222;
+        border-radius: 2px;
+        padding: 0 1px;
+    }
 }

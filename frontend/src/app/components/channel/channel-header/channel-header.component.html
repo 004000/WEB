@@ -25,7 +25,7 @@
       @if (chatService.channelInfo?.connectedUsersAmount !== undefined) {
         <div class="live-users-badge" title="משתתפים מחוברים כעת">
           <span class="live-dot"></span>
-          <span>{{ chatService.channelInfo?.connectedUsersAmount }} מחוברים כעת</span>
+          <span>{{ displayedConnectedUsers }} מחוברים כעת</span>
         </div>
       }
     </div>
@@ -55,7 +55,7 @@
                 <span class="search-result-author">{{ result.author }}</span>
                 <span class="search-result-time">{{ result.timestamp | messageTime }}</span>
               </div>
-              <div class="search-result-text">{{ result.text }}</div>
+              <div class="search-result-text" [innerHTML]="result.text | highlight:chatService.searchQuery"></div>
             </div>
           }
         }
@@ -69,6 +69,11 @@
         <nb-icon icon="email-outline"></nb-icon>
       </button>
     }
+
+    <button nbButton shape="round" class="m-2" [title]="isLargeText ? 'טקסט רגיל' : 'טקסט גדול (נגישות)'"
+      (click)="toggleLargeText()" [status]="isLargeText ? 'primary' : 'basic'">
+      <nb-icon icon="text-outline"></nb-icon>
+    </button>
 
     <button nbButton shape="round" class="m-2" [title]="isDarkMode ? 'מצב בהיר' : 'מצב חושך'"
       (click)="toggleDarkMode()" status="basic">

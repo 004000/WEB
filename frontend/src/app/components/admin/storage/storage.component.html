@@ -13,6 +13,16 @@
             }
           </div>
           <div>תקופת שמירה לפני ניקוי רגיל: <strong>{{ usage.retentionDays }} ימים</strong></div>
+          @if (usage.estimatedDaysRemaining !== undefined) {
+            <div>
+              בקצב הנוכחי, האחסון צפוי להתמלא בעוד:
+              <strong [class.text-danger]="usage.estimatedDaysRemaining < 14">
+                כ-{{ usage.estimatedDaysRemaining | number:'1.0-0' }} ימים
+              </strong>
+            </div>
+          } @else {
+            <div class="text-black-50">אין עדיין מספיק נתוני מגמה כדי להעריך זמן עד מילוי (נדרשת לפחות שעה של נתונים)</div>
+          }
           <div>
             גיבוי אוטומטי ל-GitHub:
             @if (usage.backupEnabled) {
@@ -75,6 +85,10 @@
         הרץ ניקוי חירום (לפי תפוסה)
       }
     </button>
+
+    <a nbButton status="success" href="/api/admin/messages/export">
+      ייצוא כל ההודעות ל-CSV
+    </a>
   </div>
 
   @if (lastResult) {

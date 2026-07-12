@@ -51,13 +51,14 @@ type CleanupResult struct {
 }
 
 type StorageUsageResult struct {
-	UsedBytes          int64   `json:"usedBytes"`
-	MaxBytes           int64   `json:"maxBytes"`
-	PercentUsed        float64 `json:"percentUsed"`
-	MessageCount       int64   `json:"messageCount"`
-	RetentionDays      int     `json:"retentionDays"`
-	EmergencyThreshold float64 `json:"emergencyThreshold"`
-	BackupEnabled      bool    `json:"backupEnabled"`
+	UsedBytes             int64    `json:"usedBytes"`
+	MaxBytes              int64    `json:"maxBytes"`
+	PercentUsed           float64  `json:"percentUsed"`
+	MessageCount          int64    `json:"messageCount"`
+	RetentionDays         int      `json:"retentionDays"`
+	EmergencyThreshold    float64  `json:"emergencyThreshold"`
+	BackupEnabled         bool     `json:"backupEnabled"`
+	EstimatedDaysRemaining *float64 `json:"estimatedDaysRemaining,omitempty"`
 }
 
 func fetchStorageUsage(ctx context.Context) (*StorageUsageResult, error) {
@@ -90,6 +91,7 @@ func fetchStorageUsage(ctx context.Context) (*StorageUsageResult, error) {
 	if maxBytes > 0 {
 		result.PercentUsed = float64(usedBytes) / float64(maxBytes) * 100
 	}
+	result.EstimatedDaysRemaining = estimateDaysRemaining(ctx, usedBytes, maxBytes)
 	return result, nil
 }
 
@@ -379,6 +381,7 @@ func startCleanupScheduler() {
 	go func() {
 		for range hourlyTicker.C {
 			ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+			recordStorageSnapshot(ctx)
 			result, err := runEmergencyCleanup(ctx)
 			cancel()
 			if err != nil {
@@ -388,4 +391,70 @@ func startCleanupScheduler() {
 			}
 		}
 	}()
+
+	// Take an initial snapshot shortly after startup so the growth estimate
+	// has a baseline without waiting a full hour.
+	go func() {
+		time.Sleep(2 * time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		recordStorageSnapshot(ctx)
+		cancel()
+	}()
+}
+
+const storageGrowthKey = "storage_growth"
+
+// recordStorageSnapshot stores the current usage as a baseline (first time only)
+// and always updates the latest reading, so we can estimate a growth rate.
+func recordStorageSnapshot(ctx context.Context) {
+	usage, err := fetchStorageUsage(ctx)
+	if err != nil || usage.MaxBytes == 0 {
+		return
+	}
+
+	now := time.Now().Unix()
+	exists, _ := rdb.HExists(ctx, storageGrowthKey, "baseline_ts").Result()
+	if !exists {
+		rdb.HSet(ctx, storageGrowthKey, "baseline_ts", now, "baseline_bytes", usage.UsedBytes)
+	}
+	rdb.HSet(ctx, storageGrowthKey, "latest_ts", now, "latest_bytes", usage.UsedBytes)
+}
+
+// estimateDaysRemaining projects, from the recorded growth rate, how many days
+// remain until storage reaches maxBytes. Returns nil if there isn't enough
+// data yet (needs at least a few hours between baseline and latest reading).
+func estimateDaysRemaining(ctx context.Context, usedBytes, maxBytes int64) *float64 {
+	if maxBytes == 0 {
+		return nil
+	}
+
+	data, err := rdb.HGetAll(ctx, storageGrowthKey).Result()
+	if err != nil || len(data) == 0 {
+		return nil
+	}
+
+	baselineTs, _ := strconv.ParseInt(data["baseline_ts"], 10, 64)
+	baselineBytes, _ := strconv.ParseInt(data["baseline_bytes"], 10, 64)
+	latestTs, _ := strconv.ParseInt(data["latest_ts"], 10, 64)
+	latestBytes, _ := strconv.ParseInt(data["latest_bytes"], 10, 64)
+
+	elapsedSeconds := latestTs - baselineTs
+	if elapsedSeconds < 3600 { // need at least ~1 hour of data to estimate meaningfully
+		return nil
+	}
+
+	growthBytes := latestBytes - baselineBytes
+	if growthBytes <= 0 {
+		return nil // flat or shrinking usage, no meaningful "time to full"
+	}
+
+	bytesPerDay := float64(growthBytes) / (float64(elapsedSeconds) / 86400)
+	remainingBytes := float64(maxBytes) - float64(usedBytes)
+	if remainingBytes <= 0 {
+		zero := 0.0
+		return &zero
+	}
+
+	days := remainingBytes / bytesPerDay
+	return &days
 }

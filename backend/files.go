@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"image"
+	"image/jpeg"
 	"io"
 	"net/http"
 	"net/url"
@@ -86,7 +89,24 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	t, _ := filetype.Match(head)
 
 	file.Seek(0, io.SeekStart)
-	fileHash, err := generatedFileHash(file)
+
+	// For JPEG images under a sane size, try to shrink them (resize if very
+	// large + re-encode at slightly reduced quality) to save storage space.
+	// Falls back silently to the original file on any decode/encode issue.
+	var uploadReader io.ReadSeeker = file
+	if t.MIME.Type == "image/jpeg" && handler.Size > 0 && handler.Size < 15<<20 {
+		if original, readErr := io.ReadAll(file); readErr == nil {
+			if compressed, ok := compressJPEGIfLarger(original, 1920, 82); ok && len(compressed) < len(original) {
+				uploadReader = bytes.NewReader(compressed)
+			} else {
+				uploadReader = bytes.NewReader(original)
+			}
+		} else {
+			file.Seek(0, io.SeekStart)
+		}
+	}
+
+	fileHash, err := generatedFileHash(uploadReader)
 	if err != nil {
 		http.Error(w, "error", http.StatusInternalServerError)
 		return
@@ -108,7 +128,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	if !isDuplicateFile {
 		destPath := filepath.Join(hashSubDir, fileHash)
 
-		file.Seek(0, io.SeekStart)
+		uploadReader.Seek(0, io.SeekStart)
 		destFile, err := os.Create(destPath)
 		if err != nil {
 			http.Error(w, "error", http.StatusInternalServerError)
@@ -116,7 +136,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		}
 		defer destFile.Close()
 
-		if _, err := io.Copy(destFile, file); err != nil {
+		if _, err := io.Copy(destFile, uploadReader); err != nil {
 			http.Error(w, "error", http.StatusInternalServerError)
 			return
 		}
@@ -166,6 +186,68 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		Filename: handler.Filename,
 		FileType: t.MIME.Type,
 	})
+}
+
+// compressJPEGIfLarger downsizes a JPEG to fit within maxDim (on its longest
+// side) if it's larger, and always re-encodes it at the given quality.
+// Returns ok=false if the image can't be decoded, in which case the caller
+// should keep the original bytes untouched.
+func compressJPEGIfLarger(data []byte, maxDim int, quality int) ([]byte, bool) {
+	img, err := jpeg.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil, false
+	}
+
+	bounds := img.Bounds()
+	if bounds.Dx() > maxDim || bounds.Dy() > maxDim {
+		img = resizeNearestNeighbor(img, maxDim)
+	}
+
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: quality}); err != nil {
+		return nil, false
+	}
+
+	return buf.Bytes(), true
+}
+
+// resizeNearestNeighbor scales an image down so its longest side is maxDim,
+// preserving aspect ratio. Simple nearest-neighbor sampling, no external
+// dependencies. Returns the source unchanged if it's already small enough.
+func resizeNearestNeighbor(src image.Image, maxDim int) image.Image {
+	bounds := src.Bounds()
+	srcW := bounds.Dx()
+	srcH := bounds.Dy()
+	if srcW == 0 || srcH == 0 {
+		return src
+	}
+
+	scale := float64(maxDim) / float64(srcW)
+	if srcH > srcW {
+		scale = float64(maxDim) / float64(srcH)
+	}
+	if scale >= 1 {
+		return src
+	}
+
+	dstW := int(float64(srcW) * scale)
+	dstH := int(float64(srcH) * scale)
+	if dstW < 1 {
+		dstW = 1
+	}
+	if dstH < 1 {
+		dstH = 1
+	}
+
+	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
+	for y := 0; y < dstH; y++ {
+		srcY := bounds.Min.Y + y*srcH/dstH
+		for x := 0; x < dstW; x++ {
+			srcX := bounds.Min.X + x*srcW/dstW
+			dst.Set(x, y, src.At(srcX, srcY))
+		}
+	}
+	return dst
 }
 
 func generatedFileHash(file io.Reader) (string, error) {

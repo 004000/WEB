@@ -150,9 +150,16 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     this.loadMessages().then(() => {
-      const lastReadMsg = Number(localStorage.getItem('lastReadMessage'));
       const lastMsgId = this.messages[0].id!;
-      if (lastReadMsg && lastReadMsg < lastMsgId) {
+      const savedScrollId = Number(localStorage.getItem('lastScrollMessageId'));
+      const lastReadMsg = Number(localStorage.getItem('lastReadMessage'));
+
+      if (savedScrollId && savedScrollId < lastMsgId) {
+        setTimeout(() => {
+          this.scrollToId({ messageId: savedScrollId, smooth: false, mark: false });
+          this.lastReadMessageId = lastReadMsg || savedScrollId;
+        }, 200);
+      } else if (lastReadMsg && lastReadMsg < lastMsgId) {
         setTimeout(() => {
           this.scrollToId({ messageId: lastReadMsg, smooth: false, mark: false });
           this.lastReadMessageId = lastReadMsg;
@@ -255,6 +262,17 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.showScrollToBottom = distanceFromBottom > 100;
     if (distanceFromBottom < 10) {
       this.thereNewMessages = false;
+      localStorage.removeItem('lastScrollMessageId');
+    }
+    this.updateScrollPositionStorage();
+  }
+
+  private updateScrollPositionStorage() {
+    const headerOffset = 150;
+    const el = document.elementFromPoint(window.innerWidth / 2, headerOffset);
+    const messageEl = el?.closest('app-message') as HTMLElement | null;
+    if (messageEl?.id) {
+      localStorage.setItem('lastScrollMessageId', messageEl.id);
     }
   }
 

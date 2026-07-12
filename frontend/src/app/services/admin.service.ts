@@ -23,6 +23,7 @@ export interface StorageUsage {
   emergencyThreshold: number;
   backupEnabled: boolean;
   percentUsed: number;
+  estimatedDaysRemaining?: number;
 }
 
 export interface CleanupResult {

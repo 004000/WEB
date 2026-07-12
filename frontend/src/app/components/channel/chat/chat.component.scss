@@ -28,6 +28,38 @@ nb-list-item:first-child {
   z-index: 1001;
 }
 
+.new-message-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #6a6fff;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(106, 111, 255, 0.4);
+  cursor: pointer;
+  animation: new-message-pop 0.25s ease;
+
+  &:hover {
+    background: #5a5fef;
+  }
+}
+
+@keyframes new-message-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .last-read-indicator {
   display: flex;
   flex-direction: row;

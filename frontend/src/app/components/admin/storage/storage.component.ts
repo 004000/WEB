@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 import { NbButtonModule, NbCardModule, NbToastrService } from "@nebular/theme";
 import { AdminService, StorageUsage, CleanupResult } from '../../../services/admin.service';
 
@@ -9,6 +10,7 @@ import { AdminService, StorageUsage, CleanupResult } from '../../../services/adm
     NbCardModule,
     NbButtonModule,
     FormsModule,
+    DecimalPipe,
   ],
   templateUrl: './storage.component.html',
   styleUrl: './storage.component.scss'

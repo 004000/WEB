@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnInit, OnDestroy, Output } from '@angular/core';
 
 import {
   NbButtonModule,
@@ -21,6 +21,7 @@ import { AdminPanelComponent } from "../../admin/admin-panel.component";
 import { User } from '../../../models/user.model';
 import { FormsModule } from '@angular/forms';
 import { MessageTimePipe } from '../../../pipes/message-time.pipe';
+import { HighlightPipe } from '../../../pipes/highlight.pipe';
 
 @Component({
   selector: 'app-channel-header',
@@ -30,12 +31,13 @@ import { MessageTimePipe } from '../../../pipes/message-time.pipe';
     NbUserModule,
     NbContextMenuModule,
     FormsModule,
-    MessageTimePipe
+    MessageTimePipe,
+    HighlightPipe
 ],
   templateUrl: './channel-header.component.html',
   styleUrl: './channel-header.component.scss'
 })
-export class ChannelHeaderComponent implements OnInit {
+export class ChannelHeaderComponent implements OnInit, OnDestroy {
 
   @Input()
   set userInfo(user: User | undefined) {
@@ -65,6 +67,10 @@ export class ChannelHeaderComponent implements OnInit {
   userMenu: NbMenuItem[] = [];
   isSmallScreen = false;
   isDarkMode = false;
+  isLargeText = false;
+
+  displayedConnectedUsers: number | null = null;
+  private connectedUsersAnimInterval: any;
 
   constructor(
     public chatService: ChatService,
@@ -78,6 +84,10 @@ export class ChannelHeaderComponent implements OnInit {
     private themeService: NbThemeService,
   ) {
     this.isDarkMode = localStorage.getItem('darkMode') === '1';
+    this.isLargeText = localStorage.getItem('largeText') === '1';
+    if (this.isLargeText) {
+      document.documentElement.classList.add('a11y-large-text');
+    }
   }
 
   @HostListener('window:resize')
@@ -88,6 +98,8 @@ export class ChannelHeaderComponent implements OnInit {
   ngOnInit() {
     this.chatService.updateChannelInfo()
       .then(() => this.titleService.setTitle(this.chatService.channelInfo?.name || 'TheChannel'));
+
+    this.startConnectedUsersAnimation();
 
     this.contextMenuService.onItemClick()
       .pipe(filter(({ tag }) => tag === this.userMenuTag))
@@ -156,5 +168,37 @@ export class ChannelHeaderComponent implements OnInit {
     this.isDarkMode = !this.isDarkMode;
     this.themeService.changeTheme(this.isDarkMode ? 'custom-dark' : 'custom');
     localStorage.setItem('darkMode', this.isDarkMode ? '1' : '0');
+  }
+
+  toggleLargeText() {
+    this.isLargeText = !this.isLargeText;
+    document.documentElement.classList.toggle('a11y-large-text', this.isLargeText);
+    localStorage.setItem('largeText', this.isLargeText ? '1' : '0');
+  }
+
+  private startConnectedUsersAnimation() {
+    this.connectedUsersAnimInterval = setInterval(() => {
+      const target = this.chatService.channelInfo?.connectedUsersAmount;
+      if (target === undefined) {
+        return;
+      }
+      if (this.displayedConnectedUsers === null) {
+        this.displayedConnectedUsers = target;
+        return;
+      }
+      if (this.displayedConnectedUsers === target) {
+        return;
+      }
+      const diff = target - this.displayedConnectedUsers;
+      const step = diff > 0 ? Math.max(1, Math.round(diff / 4)) : Math.min(-1, Math.round(diff / 4));
+      this.displayedConnectedUsers += step;
+      if ((step > 0 && this.displayedConnectedUsers > target) || (step < 0 && this.displayedConnectedUsers < target)) {
+        this.displayedConnectedUsers = target;
+      }
+    }, 120);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.connectedUsersAnimInterval);
   }
 }
