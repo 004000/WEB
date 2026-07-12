@@ -122,6 +122,7 @@ func main() {
 				protected.Get("/cleanup/storage", protectedWithPrivilege(Admin, getStorageUsage))
 				protected.Post("/cleanup/threshold", protectedWithPrivilege(Admin, setEmergencyThreshold))
 				protected.Get("/messages/export", protectedWithPrivilege(Admin, exportMessagesCSV))
+				protected.Get("/users/registered", protectedWithPrivilege(Admin, getRegisteredUsers))
 			})
 		})
 	})

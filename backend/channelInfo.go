@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -81,8 +82,50 @@ func editChannelInfo(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func registeringEmail(email string) {
+func registeringEmail(email string, name string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	rdb.SAdd(ctx, "registered_emails", email)
+
+	info, _ := json.Marshal(map[string]any{
+		"name":      name,
+		"lastLogin": time.Now().Format(time.RFC3339),
+	})
+	rdb.HSet(ctx, "registered_users_info", email, info)
+}
+
+type RegisteredUser struct {
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	LastLogin string `json:"lastLogin"`
+}
+
+func getRegisteredUsers(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	data, err := rdb.HGetAll(ctx, "registered_users_info").Result()
+	if err != nil {
+		http.Error(w, "error", http.StatusInternalServerError)
+		return
+	}
+
+	users := make([]RegisteredUser, 0, len(data))
+	for email, raw := range data {
+		var info struct {
+			Name      string `json:"name"`
+			LastLogin string `json:"lastLogin"`
+		}
+		if err := json.Unmarshal([]byte(raw), &info); err != nil {
+			continue
+		}
+		users = append(users, RegisteredUser{Email: email, Name: info.Name, LastLogin: info.LastLogin})
+	}
+
+	sort.Slice(users, func(i, j int) bool {
+		return users[i].LastLogin > users[j].LastLogin
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
 }

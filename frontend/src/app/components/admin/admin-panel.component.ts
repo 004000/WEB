@@ -7,6 +7,7 @@ import { ChannelInfoFormComponent } from "../channel/channel-info-form/channel-i
 import { ReportsComponent } from "./reports/reports.component";
 import { StatisticsComponent } from "./statistics/statistics.component";
 import { StorageComponent } from "./storage/storage.component";
+import { RegisteredUsersComponent } from "./registered-users/registered-users.component";
 
 @Component({
   selector: 'admin-dashboard',
@@ -21,7 +22,8 @@ import { StorageComponent } from "./storage/storage.component";
     ChannelInfoFormComponent,
     ReportsComponent,
     StatisticsComponent,
-    StorageComponent
+    StorageComponent,
+    RegisteredUsersComponent
 ],
   templateUrl: './admin-panel.component.html',
   styleUrls: ['./admin-panel.component.scss']
@@ -37,6 +39,7 @@ export class AdminPanelComponent implements OnInit {
   readonly allReports = "all-reports";
   readonly statistics = "statistics";
   readonly storage = "storage";
+  readonly registeredUsers = "registeredUsers";
 
   selectedMenuItem = this.info;
 
@@ -61,6 +64,10 @@ export class AdminPanelComponent implements OnInit {
     {
       title: 'אחסון וגיבוי',
       icon: 'hard-drive-outline',
+    },
+    {
+      title: 'משתמשים רשומים',
+      icon: 'people-outline',
     },
     {
       title: "אימוג'ים",
@@ -126,6 +133,9 @@ export class AdminPanelComponent implements OnInit {
           break;
         case 'hard-drive-outline':
           this.selectedMenuItem = this.storage;
+          break;
+        case 'people-outline':
+          this.selectedMenuItem = this.registeredUsers;
           break;
       }
     });

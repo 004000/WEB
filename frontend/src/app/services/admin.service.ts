@@ -35,6 +35,12 @@ export interface CleanupResult {
   messagesPurged: number;
 }
 
+export interface RegisteredUser {
+  email: string;
+  name: string;
+  lastLogin: string;
+}
+
 export type EditMsg = {
   new?: boolean;
   isScheduling?: boolean;
@@ -139,6 +145,10 @@ export class AdminService {
 
   setEmergencyThreshold(value: number): Promise<{ value: number }> {
     return firstValueFrom(this.http.post<{ value: number }>('/api/admin/cleanup/threshold', { value }));
+  }
+
+  getRegisteredUsers(): Promise<RegisteredUser[]> {
+    return firstValueFrom(this.http.get<RegisteredUser[]>('/api/admin/users/registered'));
   }
 
   setReports(report: Report): Promise<ResponseResult> {

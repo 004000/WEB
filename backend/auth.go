@@ -108,7 +108,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email, _ := dyno.GetString(payload.Claims["email"])
-	go registeringEmail(email)
+	displayName, _ := dyno.GetString(payload.Claims["name"])
+	go registeringEmail(email, displayName)
 
 	u, err := getUser(ctx, payload.Claims)
 	if err != nil {

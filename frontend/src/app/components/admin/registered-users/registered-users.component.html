@@ -1,0 +1,35 @@
+<div class="d-flex flex-column gap-3 p-3">
+  <h5>משתמשים רשומים ({{ users.length }})</h5>
+
+  <input type="text" class="search-input" placeholder="חיפוש לפי שם או אימייל..." [(ngModel)]="searchTerm"
+    (ngModelChange)="applyFilter()" />
+
+  @if (isLoading) {
+    <div class="text-black-50">טוען...</div>
+  } @else if (filteredUsers.length === 0) {
+    <div class="text-black-50">לא נמצאו משתמשים</div>
+  } @else {
+    <nb-card>
+      <nb-card-body class="p-0">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>שם</th>
+              <th>אימייל</th>
+              <th>התחברות אחרונה</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filteredUsers; track user.email) {
+              <tr>
+                <td>{{ user.name }}</td>
+                <td dir="ltr" class="text-end">{{ user.email }}</td>
+                <td>{{ formatDate(user.lastLogin) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </nb-card-body>
+    </nb-card>
+  }
+</div>
