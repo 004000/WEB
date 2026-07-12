@@ -123,6 +123,7 @@ func main() {
 				protected.Post("/cleanup/threshold", protectedWithPrivilege(Admin, setEmergencyThreshold))
 				protected.Get("/messages/export", protectedWithPrivilege(Admin, exportMessagesCSV))
 				protected.Get("/users/registered", protectedWithPrivilege(Admin, getRegisteredUsers))
+				protected.Get("/users/connected-live", protectedWithPrivilege(Admin, getConnectedUsersLive))
 			})
 		})
 	})

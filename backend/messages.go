@@ -186,6 +186,9 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 	go increaseCounterSSE()
 	defer decreaseCounterSSE()
 
+	connectionId := registerConnectedUser(r)
+	defer unregisterConnectedUser(connectionId)
+
 	pubsub := rdb.Subscribe(r.Context(), "events")
 	defer pubsub.Close()
 
@@ -201,6 +204,7 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 			return
 
 		case <-heartbeat.C:
+			refreshConnectedUser(connectionId)
 			_, err := fmt.Fprintf(w, "data: {\"type\": \"heartbeat\"}\n\n")
 			if err != nil {
 				return

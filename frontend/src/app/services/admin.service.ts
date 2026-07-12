@@ -41,6 +41,13 @@ export interface RegisteredUser {
   lastLogin: string;
 }
 
+export interface LiveConnection {
+  email: string;
+  name: string;
+  connectedAt: string;
+  lastSeen: string;
+}
+
 export type EditMsg = {
   new?: boolean;
   isScheduling?: boolean;
@@ -149,6 +156,10 @@ export class AdminService {
 
   getRegisteredUsers(): Promise<RegisteredUser[]> {
     return firstValueFrom(this.http.get<RegisteredUser[]>('/api/admin/users/registered'));
+  }
+
+  getConnectedUsersLive(): Promise<LiveConnection[]> {
+    return firstValueFrom(this.http.get<LiveConnection[]>('/api/admin/users/connected-live'));
   }
 
   setReports(report: Report): Promise<ResponseResult> {

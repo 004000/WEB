@@ -1,35 +1,79 @@
 <div class="d-flex flex-column gap-3 p-3">
-  <h5>משתמשים רשומים ({{ users.length }})</h5>
+  <div class="d-flex flex-row gap-2">
+    <button class="tab-btn" [class.active]="activeTab === 'live'" (click)="activeTab = 'live'">
+      מחוברים כעת ({{ liveConnections.length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="activeTab = 'all'">
+      כל המשתמשים הרשומים ({{ users.length }})
+    </button>
+  </div>
 
-  <input type="text" class="search-input" placeholder="חיפוש לפי שם או אימייל..." [(ngModel)]="searchTerm"
-    (ngModelChange)="applyFilter()" />
+  @if (activeTab === 'live') {
+    <p class="text-black-50 mb-0">
+      רשימה חיה של כל מי שנמצא כרגע בערוץ (כולל אורחים שלא התחברו). מתעדכנת אוטומטית כל 15 שניות.
+    </p>
 
-  @if (isLoading) {
-    <div class="text-black-50">טוען...</div>
-  } @else if (filteredUsers.length === 0) {
-    <div class="text-black-50">לא נמצאו משתמשים</div>
-  } @else {
-    <nb-card>
-      <nb-card-body class="p-0">
-        <table class="users-table">
-          <thead>
-            <tr>
-              <th>שם</th>
-              <th>אימייל</th>
-              <th>התחברות אחרונה</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (user of filteredUsers; track user.email) {
+    @if (isLoadingLive) {
+      <div class="text-black-50">טוען...</div>
+    } @else if (liveConnections.length === 0) {
+      <div class="text-black-50">אין כרגע אף אחד מחובר</div>
+    } @else {
+      <nb-card>
+        <nb-card-body class="p-0">
+          <table class="users-table">
+            <thead>
               <tr>
-                <td>{{ user.name }}</td>
-                <td dir="ltr" class="text-end">{{ user.email }}</td>
-                <td>{{ formatDate(user.lastLogin) }}</td>
+                <th>שם</th>
+                <th>אימייל</th>
+                <th>מחובר מאז</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </nb-card-body>
-    </nb-card>
+            </thead>
+            <tbody>
+              @for (conn of liveConnections; track $index) {
+                <tr>
+                  <td>{{ conn.name || 'אורח' }}</td>
+                  <td dir="ltr" class="text-end">{{ conn.email || '-' }}</td>
+                  <td>{{ formatDate(conn.connectedAt) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </nb-card-body>
+      </nb-card>
+    }
+  }
+
+  @if (activeTab === 'all') {
+    <input type="text" class="search-input" placeholder="חיפוש לפי שם או אימייל..." [(ngModel)]="searchTerm"
+      (ngModelChange)="applyFilter()" />
+
+    @if (isLoading) {
+      <div class="text-black-50">טוען...</div>
+    } @else if (filteredUsers.length === 0) {
+      <div class="text-black-50">לא נמצאו משתמשים</div>
+    } @else {
+      <nb-card>
+        <nb-card-body class="p-0">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>שם</th>
+                <th>אימייל</th>
+                <th>התחברות אחרונה</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of filteredUsers; track user.email) {
+                <tr>
+                  <td>{{ user.name }}</td>
+                  <td dir="ltr" class="text-end">{{ user.email }}</td>
+                  <td>{{ formatDate(user.lastLogin) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </nb-card-body>
+      </nb-card>
+    }
   }
 </div>

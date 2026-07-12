@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NbCardModule, NbToastrService } from "@nebular/theme";
-import { AdminService, RegisteredUser } from '../../../services/admin.service';
+import { AdminService, RegisteredUser, LiveConnection } from '../../../services/admin.service';
 
 @Component({
   selector: 'app-registered-users',
@@ -12,11 +12,17 @@ import { AdminService, RegisteredUser } from '../../../services/admin.service';
   templateUrl: './registered-users.component.html',
   styleUrl: './registered-users.component.scss'
 })
-export class RegisteredUsersComponent implements OnInit {
+export class RegisteredUsersComponent implements OnInit, OnDestroy {
+  activeTab: 'live' | 'all' = 'live';
+
   users: RegisteredUser[] = [];
   filteredUsers: RegisteredUser[] = [];
   searchTerm = '';
   isLoading = true;
+
+  liveConnections: LiveConnection[] = [];
+  isLoadingLive = true;
+  private liveRefreshInterval: any;
 
   constructor(
     private adminService: AdminService,
@@ -25,6 +31,12 @@ export class RegisteredUsersComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.loadLive();
+    this.liveRefreshInterval = setInterval(() => this.loadLive(), 15000);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.liveRefreshInterval);
   }
 
   load() {
@@ -36,6 +48,13 @@ export class RegisteredUsersComponent implements OnInit {
       })
       .catch(() => this.toastrService.danger('', 'שגיאה בטעינת רשימת המשתמשים'))
       .finally(() => this.isLoading = false);
+  }
+
+  loadLive() {
+    this.adminService.getConnectedUsersLive()
+      .then(connections => this.liveConnections = connections)
+      .catch(() => { })
+      .finally(() => this.isLoadingLive = false);
   }
 
   applyFilter() {

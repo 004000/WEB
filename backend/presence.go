@@ -1,0 +1,114 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"time"
+)
+
+const connectedUsersLiveKey = "connected_users_live"
+
+type LiveConnectionInfo struct {
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	ConnectedAt string `json:"connectedAt"`
+	LastSeen    string `json:"lastSeen"`
+}
+
+// registerConnectedUser records a single SSE connection's identity (or marks
+// it as a guest if not logged in) and returns a unique id for that connection,
+// to be passed to unregisterConnectedUser when the connection closes.
+func registerConnectedUser(r *http.Request) string {
+	connectionId := generatedRandomID(20)
+	if connectionId == "" {
+		return ""
+	}
+
+	session, _ := store.Get(r, cookieName)
+	user, _ := session.Values["user"].(Session)
+
+	info := LiveConnectionInfo{
+		Email:       user.Email,
+		Name:        user.PublicName,
+		ConnectedAt: time.Now().Format(time.RFC3339),
+		LastSeen:    time.Now().Format(time.RFC3339),
+	}
+	if info.Name == "" {
+		info.Name = user.Username
+	}
+	if info.Email == "" && info.Name == "" {
+		info.Name = "אורח (לא מחובר)"
+	}
+
+	data, _ := json.Marshal(info)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	rdb.HSet(ctx, connectedUsersLiveKey, connectionId, data)
+
+	return connectionId
+}
+
+// refreshConnectedUser updates the last-seen timestamp for an open connection,
+// called on every SSE heartbeat so stale entries (from ungraceful shutdowns)
+// can be filtered out even if unregisterConnectedUser never ran.
+func refreshConnectedUser(connectionId string) {
+	if connectionId == "" {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	raw, err := rdb.HGet(ctx, connectedUsersLiveKey, connectionId).Result()
+	if err != nil {
+		return
+	}
+	var info LiveConnectionInfo
+	if err := json.Unmarshal([]byte(raw), &info); err != nil {
+		return
+	}
+	info.LastSeen = time.Now().Format(time.RFC3339)
+	data, _ := json.Marshal(info)
+	rdb.HSet(ctx, connectedUsersLiveKey, connectionId, data)
+}
+
+func unregisterConnectedUser(connectionId string) {
+	if connectionId == "" {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	rdb.HDel(ctx, connectedUsersLiveKey, connectionId)
+}
+
+// getConnectedUsersLive returns one entry per open browser connection
+// (a user with multiple tabs open will appear multiple times).
+func getConnectedUsersLive(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	data, err := rdb.HGetAll(ctx, connectedUsersLiveKey).Result()
+	if err != nil {
+		http.Error(w, "error", http.StatusInternalServerError)
+		return
+	}
+
+	connections := make([]LiveConnectionInfo, 0, len(data))
+	staleCutoff := time.Now().Add(-90 * time.Second)
+	for connectionId, raw := range data {
+		var info LiveConnectionInfo
+		if err := json.Unmarshal([]byte(raw), &info); err != nil {
+			continue
+		}
+		lastSeen, err := time.Parse(time.RFC3339, info.LastSeen)
+		if err != nil || lastSeen.Before(staleCutoff) {
+			rdb.HDel(ctx, connectedUsersLiveKey, connectionId)
+			continue
+		}
+		connections = append(connections, info)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(connections)
+}

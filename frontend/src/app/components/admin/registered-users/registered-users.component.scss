@@ -9,6 +9,21 @@
   font-size: 0.9rem;
 }
 
+.tab-btn {
+  padding: 6px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border-basic-color-3, #e4e9f2);
+  background: var(--background-basic-color-1);
+  cursor: pointer;
+  font-size: 0.9rem;
+
+  &.active {
+    background: #6a6fff;
+    color: #fff;
+    border-color: #6a6fff;
+  }
+}
+
 .users-table {
   width: 100%;
   border-collapse: collapse;
