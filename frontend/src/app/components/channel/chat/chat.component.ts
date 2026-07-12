@@ -66,6 +66,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   private lastHeartbeat: number = Date.now();
   private subLastHeartbeat: any;
   lastReadMessageId: number = 0;
+  connectionId: string | null = null;
+  private leaveBeaconHandler = () => this.sendLeaveBeacon();
 
   constructor(
     private chatService: ChatService,
@@ -136,6 +138,9 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.initializeMessageListener();
     this.keepAliveSSE();
+
+    window.addEventListener('pagehide', this.leaveBeaconHandler);
+    window.addEventListener('beforeunload', this.leaveBeaconHandler);
 
     this.chatService.resultSelected.subscribe(message => {
       if (message.id !== undefined) {
@@ -230,6 +235,9 @@ export class ChatComponent implements OnInit, OnDestroy {
         case 'heartbeat':
           this.lastHeartbeat = Date.now();
           break;
+        case 'connection-id':
+          this.connectionId = message.id;
+          break;
         case 'connected-users':
           this.zone.run(() => {
             if (this.chatService.channelInfo) {
@@ -242,8 +250,17 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    window.removeEventListener('pagehide', this.leaveBeaconHandler);
+    window.removeEventListener('beforeunload', this.leaveBeaconHandler);
+    this.sendLeaveBeacon();
     this.chatService.sseClose();
     clearInterval(this.subLastHeartbeat);
+  }
+
+  private sendLeaveBeacon() {
+    if (!this.connectionId) return;
+    const blob = new Blob([JSON.stringify({ id: this.connectionId })], { type: 'application/json' });
+    navigator.sendBeacon('/api/presence/leave', blob);
   }
 
   async keepAliveSSE() {

@@ -100,7 +100,7 @@ func listLiveConnections(ctx context.Context) ([]LiveConnectionInfo, error) {
 	}
 
 	connections := make([]LiveConnectionInfo, 0, len(data))
-	staleCutoff := time.Now().Add(-90 * time.Second)
+	staleCutoff := time.Now().Add(-30 * time.Second)
 	for connectionId, raw := range data {
 		var info LiveConnectionInfo
 		if err := json.Unmarshal([]byte(raw), &info); err != nil {
@@ -145,6 +145,27 @@ func broadcastLiveConnectionCount() {
 		return
 	}
 	rdb.Publish(ctx, "events", payload)
+}
+
+// leaveConnection lets the browser proactively signal that a connection is
+// closing (tab closed, page refreshed, navigated away) via sendBeacon, so it
+// disappears from the live list immediately instead of waiting for the
+// heartbeat-based staleness timeout. No privilege check: any client can only
+// ever remove its own connection id, which carries no sensitive data.
+func leaveConnection(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Id string `json:"id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	unregisterConnectedUser(body.Id)
+	go broadcastLiveConnectionCount()
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func getConnectedUsersLive(w http.ResponseWriter, r *http.Request) {

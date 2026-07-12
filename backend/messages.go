@@ -169,7 +169,7 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	clientCtx := r.Context()
-	heartbeat := time.NewTicker(25 * time.Second)
+	heartbeat := time.NewTicker(10 * time.Second)
 	defer heartbeat.Stop()
 
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -177,13 +177,14 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no")
 
-	_, err := fmt.Fprintf(w, "data: {\"type\": \"heartbeat\"}\n\n")
+	connectionId := registerConnectedUser(r)
+
+	_, err := fmt.Fprintf(w, "data: {\"type\": \"connection-id\", \"id\": \"%s\"}\n\n", connectionId)
 	if err != nil {
 		return
 	}
 	flusher.Flush()
 
-	connectionId := registerConnectedUser(r)
 	go func() {
 		increaseCounterSSE()
 		broadcastLiveConnectionCount()

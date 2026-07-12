@@ -67,6 +67,7 @@ func main() {
 	r.Post("/api/import/post", addNewPost)
 
 	r.Get("/api/version", getVersion)
+	r.Post("/api/presence/leave", leaveConnection)
 
 	r.Get("/auth/google", getGoogleAuthValues)
 	r.Post("/auth/login", login)
