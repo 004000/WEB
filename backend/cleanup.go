@@ -78,6 +78,14 @@ func fetchStorageUsage(ctx context.Context) (*StorageUsageResult, error) {
 		}
 	}
 
+	// Some managed Redis providers (Upstash, Redis Cloud, etc.) don't report a
+	// real maxmemory via INFO, which would otherwise break the percentage and
+	// days-remaining estimates. STORAGE_MAX_MB lets each deployment declare
+	// its actual plan size manually so the numbers stay accurate everywhere.
+	if manualMaxMB, err := strconv.ParseInt(os.Getenv("STORAGE_MAX_MB"), 10, 64); err == nil && manualMaxMB > 0 {
+		maxBytes = manualMaxMB * 1024 * 1024
+	}
+
 	messageCount, _ := rdb.ZCard(ctx, "m_times:1").Result()
 
 	result := &StorageUsageResult{

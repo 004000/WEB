@@ -131,6 +131,7 @@ POST https://example.com/api/import/post
 |---|---|---|
 |`CLEANUP_RETENTION_DAYS`|`90`|כמות הימים לשמירת הודעות לפני שהן מועברות לגיבוי ונמחקות|
 |`STORAGE_EMERGENCY_THRESHOLD_PERCENT`|`80`|אחוז התפוסה שמעליו מופעל ניקוי חירום של ההודעות הישנות ביותר|
+|`STORAGE_MAX_MB`|-|קיבולת ידנית (ב-MB) של מסד הנתונים בערוץ הזה. חובה להגדיר אם הספק (Upstash, Redis Cloud וכו') לא מדווח `maxmemory` אמיתי — אחרת אחוזי התפוסה וההערכה לזמן מילוי לא יעבדו נכון|
 |`GITHUB_BACKUP_TOKEN`|-|Personal Access Token מסוג fine-grained עם הרשאת `Contents: Read and write` על ריפו הגיבוי|
 |`GITHUB_BACKUP_REPO`|-|שם הריפו לגיבוי, בפורמט `owner/repo`|
 
