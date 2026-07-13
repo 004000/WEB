@@ -2,6 +2,7 @@
   max-width: 80vw;
   background-color: var(--background-basic-color-2) !important;
   color: var(--text-basic-color) !important;
+  border-width: 2px !important;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -58,9 +59,19 @@ nb-icon {
 }
 
 .message-card.mark_message {
-  border: 2px solid #6a6fff !important;
-  box-shadow: 0 0 0 3px rgba(106, 111, 255, 0.25);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  animation: message-highlight-blink 1s ease-in-out 3;
+}
+
+@keyframes message-highlight-blink {
+  0%, 100% {
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  50% {
+    border: 2px solid #4fc3f7;
+    box-shadow: 0 0 0 4px rgba(79, 195, 247, 0.3);
+  }
 }
 
 .emojis-section {
