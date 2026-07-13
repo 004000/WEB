@@ -5,7 +5,7 @@
       [picture]="chatService.channelInfo?.logoUrl || ''" [name]="chatService.channelInfo?.name || ''"
       onlyPicture></nb-user>
   </div>
-  <div class="d-flex flex-column gap-1 overflow-auto">
+  <div class="d-flex flex-column gap-1 overflow-auto message-hover-group">
     <div class="d-flex flex-row gap-2 pe-1">
       <strong class="text-black-50">{{_authService.userInfo?.privileges?.['admin'] ? message.author :
         chatService.channelInfo?.name
@@ -22,34 +22,36 @@
           (click)="editMessage(message)" status="danger"></nb-icon>
       </div>
       }
-      @if (_authService.userInfo?.privileges?.['writer']) {
-      <button class="icon-button" nbButton ghost shape="round" size="small" (click)="editMessage(message)"
-        title="ערוך הודעה">
-        <nb-icon icon="edit"></nb-icon>
-      </button>
-      }
-      @if (_authService.userInfo?.privileges?.['writer'] && !message.deleted) {
-      <button class="icon-button" nbButton ghost shape="round" size="small" (click)="deleteMessage(message)"
-        title="מחק הודעה">
-        <nb-icon icon="trash-2"></nb-icon>
-      </button>
-      }
-      @if (_authService.userInfo?.privileges?.['writer']) {
-      <button class="icon-button" nbButton ghost shape="round" size="small" (click)="quoteMessage(message)"
-        title="צטט הודעה">
-        <nb-icon icon="corner-down-left-outline"></nb-icon>
-      </button>
-      }
-      @if (_authService.userInfo) {
-      <button nbButton ghost shape="round" size="small" (click)="openReportDialog(message.id)" title="דווח על ההודעה"
-        class="icon-button">
-        <nb-icon icon="alert-triangle-outline"></nb-icon>
-      </button>
-      }
-      <button class="icon-button" nbButton ghost shape="round" size="small" (click)="copyLink(message.id)"
-        title="העתק קישור להודעה">
-        <nb-icon icon="link-2"></nb-icon>
-      </button>
+      <div class="message-actions-toolbar">
+        @if (_authService.userInfo?.privileges?.['writer']) {
+        <button class="icon-button" nbButton ghost shape="round" size="small" (click)="editMessage(message)"
+          title="ערוך הודעה">
+          <nb-icon icon="edit"></nb-icon>
+        </button>
+        }
+        @if (_authService.userInfo?.privileges?.['writer'] && !message.deleted) {
+        <button class="icon-button" nbButton ghost shape="round" size="small" (click)="deleteMessage(message)"
+          title="מחק הודעה">
+          <nb-icon icon="trash-2"></nb-icon>
+        </button>
+        }
+        @if (_authService.userInfo?.privileges?.['writer']) {
+        <button class="icon-button" nbButton ghost shape="round" size="small" (click)="quoteMessage(message)"
+          title="צטט הודעה">
+          <nb-icon icon="corner-down-left-outline"></nb-icon>
+        </button>
+        }
+        @if (_authService.userInfo) {
+        <button nbButton ghost shape="round" size="small" (click)="openReportDialog(message.id)"
+          title="דווח על ההודעה" class="icon-button">
+          <nb-icon icon="alert-triangle-outline"></nb-icon>
+        </button>
+        }
+        <button class="icon-button" nbButton ghost shape="round" size="small" (click)="copyLink(message.id)"
+          title="העתק קישור להודעה">
+          <nb-icon icon="link-2"></nb-icon>
+        </button>
+      </div>
     </div>
     <div [ngbPopover]="emojiMenu" [placement]="['top', 'bottom']" [disablePopover]="!reacts.length"
       [triggers]="'manual'" [popoverContext]="{message}" [autoClose]="'outside'" [popoverClass]="'emoji-picker-popover'"
