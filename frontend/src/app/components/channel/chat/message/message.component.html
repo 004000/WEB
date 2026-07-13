@@ -61,7 +61,7 @@
     </div>
     <div [ngbPopover]="emojiMenu" [placement]="['top', 'bottom']" [disablePopover]="!reacts.length"
       [triggers]="'manual'" [popoverContext]="{message}" [autoClose]="'outside'" [popoverClass]="'emoji-picker-popover'"
-      (mouseenter)="showEmojiMenu()" (mouseleave)="scheduleEmojiMenuClose()" #p="ngbPopover">
+      #p="ngbPopover">
       <div class="d-flex flex-column bg-light rounded-4 border fs-5 f lh-base message-card"
         [ngStyle]="{'opacity': (message.deleted || isSchedulingMessage) ? 0.5 : 1}">
         <div class="m-2" #media>
