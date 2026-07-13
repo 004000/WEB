@@ -9,7 +9,13 @@
 .message-actions-toolbar {
   display: flex;
   flex-direction: row;
-  gap: 4px;
+  gap: 2px;
+  background: var(--background-basic-color-1, #fff);
+  border: 1px solid var(--border-basic-color-3, #e4e9f2);
+  border-radius: 20px;
+  padding: 2px 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  width: fit-content;
 }
 
 @media (hover: hover) and (pointer: fine) {
