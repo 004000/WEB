@@ -163,3 +163,43 @@
         padding: 0 1px;
     }
 }
+
+@media (max-width: 600px) {
+    .img-circle {
+        height: 44px;
+        width: 44px;
+    }
+
+    .header-name-col {
+        max-width: 30vw;
+        font-size: 0.85rem;
+
+        .fs-4 {
+            font-size: 1rem !important;
+        }
+    }
+
+    .search-bar-wrapper {
+        position: static;
+        transform: none;
+        flex: 1 1 auto;
+        width: auto;
+        max-width: none;
+        min-width: 0;
+        margin: 0 4px;
+    }
+
+    .search-bar {
+        padding: 4px 10px;
+    }
+
+    .header-actions {
+        ::ng-deep button.m-2 {
+            margin: 0 2px !important;
+        }
+    }
+
+    .live-users-badge {
+        display: none;
+    }
+}
