@@ -51,9 +51,9 @@
           title="העתק קישור להודעה">
           <nb-icon icon="link-2"></nb-icon>
         </button>
-        @if (_authService.userInfo && reacts.length) {
+        @if (_authService.userInfo) {
         <button class="icon-button" nbButton ghost shape="round" size="small" title="הוסף תגובה"
-          (mouseenter)="showEmojiMenu()" (mouseleave)="scheduleEmojiMenuClose()" (click)="popover.open()">
+          (click)="popover.open()">
           <nb-icon icon="smiling-face-outline"></nb-icon>
         </button>
         }
