@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/gob"
 	"encoding/json"
 	"log"
@@ -9,11 +10,13 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/boj/redistore"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	goredis "github.com/gomodule/redigo/redis"
 )
 
 var rootStaticFolder = os.Getenv("ROOT_STATIC_FOLDER")
@@ -52,7 +55,28 @@ func main() {
 	startCleanupScheduler()
 
 	var err error
-	store, err = redistore.NewRediStore(10, redisType, redisAddr, "", redisPass, []byte(secretKey))
+	sessionPool := &goredis.Pool{
+		MaxIdle:     10,
+		IdleTimeout: 240 * time.Second,
+		TestOnBorrow: func(c goredis.Conn, t time.Time) error {
+			_, err := c.Do("PING")
+			return err
+		},
+		Dial: func() (goredis.Conn, error) {
+			options := []goredis.DialOption{
+				goredis.DialPassword(redisPass),
+				goredis.DialDatabase(0),
+			}
+			if redisTLS {
+				options = append(options,
+					goredis.DialUseTLS(true),
+					goredis.DialTLSConfig(&tls.Config{ServerName: strings.Split(redisAddr, ":")[0]}),
+				)
+			}
+			return goredis.Dial(redisType, redisAddr, options...)
+		},
+	}
+	store, err = redistore.NewRediStoreWithPool(sessionPool, []byte(secretKey))
 	if err != nil {
 		panic(err)
 	}
