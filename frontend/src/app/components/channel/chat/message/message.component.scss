@@ -9,13 +9,17 @@
 .message-actions-toolbar {
   display: flex;
   flex-direction: row;
-  gap: 2px;
+  gap: 4px;
   background: var(--background-basic-color-1, #fff);
   border: 1px solid var(--border-basic-color-3, #e4e9f2);
-  border-radius: 20px;
-  padding: 2px 4px;
+  border-radius: 22px;
+  padding: 4px 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   width: fit-content;
+
+  ::ng-deep nb-icon {
+    font-size: 1.15rem;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -160,15 +164,17 @@ nb-icon {
 .emoji-picker-menu {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 6px;
+  padding: 6px;
+  max-width: 320px;
 
   button.emoji-option {
     border: none;
     background: transparent;
-    border-radius: 4px;
-    padding: 4px;
+    border-radius: 6px;
+    padding: 6px;
     transition: background-color 0.1s ease;
-    font-size: 16px;
+    font-size: 22px;
     line-height: 1;
     cursor: pointer;
 
