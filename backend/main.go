@@ -92,6 +92,8 @@ func main() {
 
 	r.Get("/api/version", getVersion)
 	r.Post("/api/presence/leave", leaveConnection)
+	r.Get("/api/status", getStatus)
+	r.Options("/api/status", getStatus)
 
 	r.Get("/auth/google", getGoogleAuthValues)
 	r.Post("/auth/login", login)
