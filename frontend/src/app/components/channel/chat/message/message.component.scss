@@ -3,6 +3,7 @@
   background-color: var(--background-basic-color-2) !important;
   color: var(--text-basic-color) !important;
   border-width: 2px !important;
+  position: relative;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -96,18 +97,27 @@ nb-icon {
 }
 
 .message-card.mark_message {
-  animation: message-highlight-blink 1s ease-in-out 3;
+  position: relative;
 }
 
-@keyframes message-highlight-blink {
+.message-card.mark_message::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: #29b6f6;
+  opacity: 0;
+  pointer-events: none;
+  animation: message-highlight-fill 1s ease-in-out 3;
+}
+
+@keyframes message-highlight-fill {
   0%, 100% {
-    outline: 3px solid transparent;
-    outline-offset: 2px;
+    opacity: 0;
   }
 
   50% {
-    outline: 3px solid #29b6f6;
-    outline-offset: 2px;
+    opacity: 0.4;
   }
 }
 
