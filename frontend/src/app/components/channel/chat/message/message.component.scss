@@ -101,11 +101,13 @@ nb-icon {
 
 @keyframes message-highlight-blink {
   0%, 100% {
-    background-color: var(--background-basic-color-2) !important;
+    outline: 3px solid transparent;
+    outline-offset: 2px;
   }
 
   50% {
-    background-color: #b3e5fc !important;
+    outline: 3px solid #29b6f6;
+    outline-offset: 2px;
   }
 }
 
