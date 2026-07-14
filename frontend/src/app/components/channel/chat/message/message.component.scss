@@ -18,7 +18,12 @@
   width: fit-content;
 
   ::ng-deep nb-icon {
-    font-size: 1.15rem;
+    font-size: 1.3rem;
+  }
+
+  .toolbar-emoji {
+    font-size: 1.3rem;
+    line-height: 1;
   }
 }
 
