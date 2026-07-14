@@ -62,7 +62,7 @@ export class MessageComponent implements OnInit, AfterViewInit, OnDestroy {
     public _authService: AuthService,
   ) { }
 
-  reacts: string[] = [];
+  reacts: string[] = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
   private closeEmojiMenuTimeout: any;
   private isScrolling = false;
   private hoverTimer: any;
@@ -74,7 +74,11 @@ export class MessageComponent implements OnInit, AfterViewInit, OnDestroy {
       this.message.id = this.indexId;
     }
     this.chatService.getEmojisList()
-      .then(emojis => this.reacts = emojis)
+      .then(emojis => {
+        if (emojis?.length) {
+          this.reacts = emojis;
+        }
+      })
       .catch(() => this.toastrService.danger('', 'שגיאה בהגדרת אימוגים'));
 
     window.addEventListener('scroll', this.onScroll, true);
