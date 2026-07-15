@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>לוח בקרה מאוחד — הערוצים שלי</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-border: #2a313c;
+    --text: #e6e9ee;
+    --text-dim: #8b95a3;
+    --accent: #4fc3f7;
+    --good: #34d399;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --mono: 'SF Mono', 'Consolas', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    min-height: 100vh;
+    padding: 32px 20px 60px;
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  header { margin-bottom: 28px; }
+  header h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+    letter-spacing: 0.3px;
+  }
+  header p { color: var(--text-dim); margin: 0; font-size: 0.9rem; }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .toolbar button {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .toolbar button:hover { border-color: var(--accent); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card .dot {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-dim);
+  }
+  .card .dot.online { background: var(--good); box-shadow: 0 0 8px var(--good); }
+  .card .dot.offline { background: var(--bad); }
+
+  .card h2 {
+    font-size: 1.05rem;
+    margin: 0 0 2px;
+    padding-left: 22px;
+  }
+  .card .subtitle {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    margin-bottom: 14px;
+    word-break: break-all;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    padding: 6px 0;
+    border-top: 1px solid var(--panel-border);
+  }
+  .metric-row:first-of-type { border-top: none; }
+  .metric-row .label { color: var(--text-dim); }
+  .metric-row .value { font-family: var(--mono); }
+
+  .bar-track {
+    height: 6px;
+    background: #232a35;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--good);
+    transition: width 0.4s ease;
+  }
+  .bar-fill.warn { background: var(--warn); }
+  .bar-fill.bad { background: var(--bad); }
+
+  .error-msg {
+    color: var(--bad);
+    font-size: 0.8rem;
+    padding: 8px 0;
+  }
+
+  .edit-link {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--accent);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  dialog {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 22px;
+    width: min(90vw, 420px);
+  }
+  dialog::backdrop { background: rgba(0,0,0,0.6); }
+  dialog h3 { margin-top: 0; }
+  dialog label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin: 12px 0 4px;
+  }
+  dialog input {
+    width: 100%;
+    background: #0e1116;
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+  }
+  dialog .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+  dialog button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--panel-border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
+  dialog button.primary {
+    background: var(--accent);
+    color: #0e1116;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>לוח בקרה מאוחד</h1>
+      <p>סטטוס חי של כל הערוצים — מתעדכן כל 30 שניות</p>
+    </header>
+
+    <div class="toolbar">
+      <button id="refreshBtn">🔄 רענן עכשיו</button>
+      <button id="addSiteBtn">+ הוסף / ערוך אתר</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <footer>הנתונים נשמרים רק בדפדפן שלך (localStorage) — לא נשלחים לשום מקום חוץ מהאתרים עצמם.</footer>
+  </div>
+
+  <dialog id="siteDialog">
+    <h3 id="dialogTitle">הוספת אתר</h3>
+    <input type="hidden" id="siteIndex" value="-1">
+    <label>שם לתצוגה (חופשי)</label>
+    <input id="inputLabel" placeholder="למשל: חדשות">
+    <label>כתובת האתר (עם https://)</label>
+    <input id="inputUrl" placeholder="https://my-channel-w1nx.onrender.com">
+    <label>מפתח API (מוגדר בהגדרות הערוץ תחת api_secret_key)</label>
+    <input id="inputKey" placeholder="המפתח שהגדרת בערוץ">
+    <div class="actions">
+      <button id="deleteSiteBtn" style="display:none;color:#f87171;border-color:#f87171;">מחק אתר</button>
+      <button id="cancelDialogBtn">ביטול</button>
+      <button class="primary" id="saveSiteBtn">שמור</button>
+    </div>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY = 'multiChannelDashboardSites';
+
+    function loadSites() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch { return []; }
+    }
+    function saveSites(sites) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sites));
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes && bytes !== 0) return '-';
+      const mb = bytes / (1024 * 1024);
+      return mb.toFixed(1) + ' MB';
+    }
+
+    function barClass(percent) {
+      if (percent >= 85) return 'bad';
+      if (percent >= 65) return 'warn';
+      return '';
+    }
+
+    async function fetchStatus(site) {
+      const res = await fetch(site.url.replace(/\/$/, '') + '/api/status', {
+        headers: { 'X-API-Key': site.key }
+      });
+      if (!res.ok) throw new Error('שגיאה בגישה (בדקו את המפתח)');
+      return res.json();
+    }
+
+    function renderCard(site, index, status, error) {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const online = !error;
+      const percent = status ? Math.round(status.percentUsed || 0) : 0;
+
+      card.innerHTML = `
+        <span class="dot ${online ? 'online' : 'offline'}"></span>
+        <h2>${site.label || status?.channelName || 'ערוץ'}</h2>
+        <div class="subtitle">${site.url.replace(/^https?:\/\//, '')}</div>
+        ${error
+          ? `<div class="error-msg">⚠️ ${error}</div>`
+          : `
+            <div class="metric-row">
+              <span class="label">מחוברים כעת</span>
+              <span class="value">${status.connectedUsersLive ?? '-'}</span>
+            </div>
+            <div class="metric-row">
+              <span class="label">הודעות בערוץ</span>
+              <span class="value">${status.messageCount ?? '-'}</span>
+            </div>
+            <div class="metric-row">
+              <span class="label">תפוסת אחסון</span>
+              <span class="value">${formatBytes(status.usedBytes)} / ${formatBytes(status.maxBytes)}</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill ${barClass(percent)}" style="width:${Math.min(percent,100)}%"></div></div>
+            <div class="metric-row" style="border-top:none; margin-top:6px;">
+              <span class="label">גיבוי אוטומטי</span>
+              <span class="value">${status.backupEnabled ? '✅ מופעל' : '❌ לא מוגדר'}</span>
+            </div>
+            ${status.estimatedDaysLeft != null
+              ? `<div class="metric-row" style="border-top:none;">
+                  <span class="label">זמן משוער עד מילוי</span>
+                  <span class="value">${Math.round(status.estimatedDaysLeft)} ימים</span>
+                </div>`
+              : ''}
+          `
+        }
+        <div class="edit-link" data-index="${index}">ערוך אתר זה</div>
+      `;
+
+      card.querySelector('.edit-link').addEventListener('click', () => openDialog(index));
+      return card;
+    }
+
+    async function refreshAll() {
+      const sites = loadSites();
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      if (sites.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-dim)">אין עדיין אתרים מוגדרים. לחצו על "הוסף / ערוך אתר" כדי להתחיל.</p>';
+        return;
+      }
+
+      for (let i = 0; i < sites.length; i++) {
+        const site = sites[i];
+        try {
+          const status = await fetchStatus(site);
+          grid.appendChild(renderCard(site, i, status, null));
+        } catch (e) {
+          grid.appendChild(renderCard(site, i, null, e.message));
+        }
+      }
+    }
+
+    const dialog = document.getElementById('siteDialog');
+    function openDialog(index) {
+      const sites = loadSites();
+      const site = index >= 0 ? sites[index] : { label: '', url: '', key: '' };
+      document.getElementById('dialogTitle').textContent = index >= 0 ? 'עריכת אתר' : 'הוספת אתר';
+      document.getElementById('siteIndex').value = index;
+      document.getElementById('inputLabel').value = site.label || '';
+      document.getElementById('inputUrl').value = site.url || '';
+      document.getElementById('inputKey').value = site.key || '';
+      document.getElementById('deleteSiteBtn').style.display = index >= 0 ? 'inline-block' : 'none';
+      dialog.showModal();
+    }
+
+    document.getElementById('addSiteBtn').addEventListener('click', () => openDialog(-1));
+    document.getElementById('cancelDialogBtn').addEventListener('click', () => dialog.close());
+    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+
+    document.getElementById('saveSiteBtn').addEventListener('click', () => {
+      const index = parseInt(document.getElementById('siteIndex').value, 10);
+      const site = {
+        label: document.getElementById('inputLabel').value.trim(),
+        url: document.getElementById('inputUrl').value.trim(),
+        key: document.getElementById('inputKey').value.trim(),
+      };
+      if (!site.url || !site.key) { alert('חובה למלא כתובת ומפתח API'); return; }
+
+      const sites = loadSites();
+      if (index >= 0) sites[index] = site; else sites.push(site);
+      saveSites(sites);
+      dialog.close();
+      refreshAll();
+    });
+
+    document.getElementById('deleteSiteBtn').addEventListener('click', () => {
+      const index = parseInt(document.getElementById('siteIndex').value, 10);
+      const sites = loadSites();
+      sites.splice(index, 1);
+      saveSites(sites);
+      dialog.close();
+      refreshAll();
+    });
+
+    refreshAll();
+    setInterval(refreshAll, 30000);
+  </script>
+</body>
+</html>
