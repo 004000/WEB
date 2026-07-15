@@ -281,7 +281,7 @@
             </div>
             <div class="metric-row">
               <span class="label">תפוסת אחסון</span>
-              <span class="value">${formatBytes(status.usedBytes)} / ${formatBytes(status.maxBytes)}</span>
+              <bdi class="value">${formatBytes(status.usedBytes)} / ${formatBytes(status.maxBytes)}</bdi>
             </div>
             <div class="bar-track"><div class="bar-fill ${barClass(percent)}" style="width:${Math.min(percent,100)}%"></div></div>
             <div class="metric-row" style="border-top:none; margin-top:6px;">
