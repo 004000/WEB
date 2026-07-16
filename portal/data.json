@@ -1,0 +1,34 @@
+{
+  "categories": [
+    { "id": "news", "name": "חדשות", "number": "01" },
+    { "id": "shopping", "name": "קניות", "number": "02" },
+    { "id": "ads", "name": "פרסומות", "number": "03" },
+    { "id": "entertainment", "name": "בידור", "number": "04" }
+  ],
+  "sites": [
+    {
+      "id": "my-channel",
+      "categoryId": "news",
+      "name": "עדכונים כשר נטפרי",
+      "tagline": "מקורות כשרים פתוחים בנטפרי",
+      "description": "עדכוני חדשות בזמן אמת מכמה מקורות, מסוננים וזמינים כל היום.",
+      "url": "https://my-channel-w1nx.onrender.com"
+    },
+    {
+      "id": "shopping-channel",
+      "categoryId": "shopping",
+      "name": "ערוץ הקניות",
+      "tagline": "מבצעים ועדכוני קניות",
+      "description": "עדכוני מבצעים, קופונים והנחות, מתעדכן לאורך היום.",
+      "url": "https://shopping-channel.onrender.com"
+    },
+    {
+      "id": "ads-channel",
+      "categoryId": "ads",
+      "name": "ערוץ הפרסומות",
+      "tagline": "פרסומות ותוכן ממומן",
+      "description": "מרחב לפרסום עסקים ושירותים.",
+      "url": "https://ads-channel.onrender.com"
+    }
+  ]
+}

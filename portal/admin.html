@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ניהול מדריך הערוצים</title>
+<style>
+  :root {
+    --bg: #1A0A11;
+    --panel: #2B0F1A;
+    --line: rgba(232,185,78,0.2);
+    --cream: #F6EDE2;
+    --gold: #E8B94E;
+    --muted: #C9AF9A;
+    --danger: #FF6B5B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    padding: 32px 20px 80px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  p.sub { color: var(--muted); margin-top: 0; font-size: 0.88rem; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 20px;
+  }
+  .panel h2 { font-size: 1.05rem; margin: 0 0 14px; color: var(--gold); }
+
+  label { display: block; font-size: 0.8rem; color: var(--muted); margin: 10px 0 4px; }
+  input, select, textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--cream);
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+
+  button {
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--cream);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+  button.primary { background: var(--gold); color: var(--bg); border-color: var(--gold); font-weight: 700; }
+  button.danger { border-color: var(--danger); color: var(--danger); }
+
+  .list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    font-size: 0.9rem;
+  }
+  .list-item:first-child { border-top: none; }
+  .list-item .actions { display: flex; gap: 8px; }
+  .list-item .actions button { padding: 4px 10px; font-size: 0.78rem; }
+
+  .status { font-size: 0.82rem; margin-top: 10px; }
+  .status.ok { color: #4ade80; }
+  .status.err { color: var(--danger); }
+
+  .gate {
+    max-width: 420px;
+    margin: 80px auto;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div id="gate" class="gate">
+      <h1>ניהול מדריך הערוצים</h1>
+      <p class="sub">יש להזין Personal Access Token של GitHub עם הרשאת Contents: Read and write על 004000/WEB</p>
+      <label>GitHub Token</label>
+      <input type="password" id="tokenInput" placeholder="github_pat_...">
+      <div style="margin-top:14px;"><button class="primary" id="unlockBtn">כניסה</button></div>
+      <div class="status" id="gateStatus"></div>
+    </div>
+
+    <div id="app" style="display:none;">
+      <h1>ניהול מדריך הערוצים</h1>
+      <p class="sub">שינויים נשמרים ישירות ל-GitHub, והאתר הציבורי יתעדכן אוטומטית תוך דקה-שתיים.</p>
+
+      <div class="panel">
+        <h2>קטגוריות</h2>
+        <div id="categoriesList"></div>
+        <div class="row" style="margin-top:14px;">
+          <input id="newCatName" placeholder="שם קטגוריה חדשה">
+          <input id="newCatNumber" placeholder="מספר (למשל 05)" style="max-width:100px;">
+          <button id="addCatBtn">+ הוסף</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>ערוצים</h2>
+        <div id="sitesList"></div>
+      </div>
+
+      <div class="panel">
+        <h2 id="formTitle">הוספת ערוץ</h2>
+        <input type="hidden" id="siteId" value="">
+        <label>שם הערוץ</label>
+        <input id="siteName">
+        <label>קטגוריה</label>
+        <select id="siteCategory"></select>
+        <label>כותרת קצרה (טאגליין)</label>
+        <input id="siteTagline">
+        <label>תיאור</label>
+        <textarea id="siteDesc"></textarea>
+        <label>כתובת (עם https://)</label>
+        <input id="siteUrl" placeholder="https://...">
+        <div class="row" style="margin-top:14px;">
+          <button class="primary" id="saveSiteBtn">שמור ערוץ</button>
+          <button id="clearFormBtn">נקה טופס</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button class="primary" id="commitBtn" style="width:100%;">💾 שמור הכל ל-GitHub</button>
+        <div class="status" id="saveStatus"></div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  const REPO = '004000/WEB';
+  const FILE_PATH = 'portal/data.json';
+  let TOKEN = localStorage.getItem('portalAdminToken') || '';
+  let DATA = { categories: [], sites: [] };
+  let FILE_SHA = null;
+
+  function ghHeaders() {
+    return { 'Authorization': 'Bearer ' + TOKEN, 'Accept': 'application/vnd.github+json' };
+  }
+
+  async function loadFromGithub() {
+    const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`, { headers: ghHeaders() });
+    if (!res.ok) throw new Error('טעינה נכשלה, בדקו את הטוקן');
+    const json = await res.json();
+    FILE_SHA = json.sha;
+    DATA = JSON.parse(decodeURIComponent(escape(atob(json.content))));
+  }
+
+  async function saveToGithub() {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(DATA, null, 2))));
+    const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`, {
+      method: 'PUT',
+      headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Update channel directory via admin panel',
+        content,
+        sha: FILE_SHA,
+      }),
+    });
+    if (!res.ok) throw new Error('שמירה נכשלה');
+    const json = await res.json();
+    FILE_SHA = json.content.sha;
+  }
+
+  function renderCategories() {
+    const list = document.getElementById('categoriesList');
+    list.innerHTML = '';
+    DATA.categories.forEach((cat, i) => {
+      const row = document.createElement('div');
+      row.className = 'list-item';
+      row.innerHTML = `
+        <span>${cat.number} — ${cat.name}</span>
+        <span class="actions"><button class="danger" data-i="${i}">מחק</button></span>
+      `;
+      row.querySelector('button').addEventListener('click', () => {
+        DATA.sites = DATA.sites.filter(s => s.categoryId !== cat.id);
+        DATA.categories.splice(i, 1);
+        renderAll();
+      });
+      list.appendChild(row);
+    });
+
+    const select = document.getElementById('siteCategory');
+    select.innerHTML = DATA.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  function renderSites() {
+    const list = document.getElementById('sitesList');
+    list.innerHTML = '';
+    DATA.sites.forEach((site, i) => {
+      const cat = DATA.categories.find(c => c.id === site.categoryId);
+      const row = document.createElement('div');
+      row.className = 'list-item';
+      row.innerHTML = `
+        <span>${site.name} <span style="color:var(--muted)">(${cat?.name || '—'})</span></span>
+        <span class="actions">
+          <button data-edit="${i}">ערוך</button>
+          <button class="danger" data-del="${i}">מחק</button>
+        </span>
+      `;
+      row.querySelector('[data-edit]').addEventListener('click', () => loadSiteIntoForm(i));
+      row.querySelector('[data-del]').addEventListener('click', () => {
+        DATA.sites.splice(i, 1);
+        renderAll();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function loadSiteIntoForm(i) {
+    const site = DATA.sites[i];
+    document.getElementById('formTitle').textContent = 'עריכת ערוץ';
+    document.getElementById('siteId').value = site.id;
+    document.getElementById('siteName').value = site.name;
+    document.getElementById('siteCategory').value = site.categoryId;
+    document.getElementById('siteTagline').value = site.tagline || '';
+    document.getElementById('siteDesc').value = site.description || '';
+    document.getElementById('siteUrl').value = site.url;
+  }
+
+  function clearForm() {
+    document.getElementById('formTitle').textContent = 'הוספת ערוץ';
+    document.getElementById('siteId').value = '';
+    document.getElementById('siteName').value = '';
+    document.getElementById('siteTagline').value = '';
+    document.getElementById('siteDesc').value = '';
+    document.getElementById('siteUrl').value = '';
+  }
+
+  function renderAll() {
+    renderCategories();
+    renderSites();
+  }
+
+  document.getElementById('addCatBtn').addEventListener('click', () => {
+    const name = document.getElementById('newCatName').value.trim();
+    const number = document.getElementById('newCatNumber').value.trim() || String(DATA.categories.length + 1).padStart(2, '0');
+    if (!name) return;
+    const id = 'cat_' + Date.now();
+    DATA.categories.push({ id, name, number });
+    document.getElementById('newCatName').value = '';
+    document.getElementById('newCatNumber').value = '';
+    renderAll();
+  });
+
+  document.getElementById('saveSiteBtn').addEventListener('click', () => {
+    const name = document.getElementById('siteName').value.trim();
+    const url = document.getElementById('siteUrl').value.trim();
+    if (!name || !url) { alert('שם וכתובת הם שדות חובה'); return; }
+
+    const existingId = document.getElementById('siteId').value;
+    const site = {
+      id: existingId || 'site_' + Date.now(),
+      name,
+      categoryId: document.getElementById('siteCategory').value,
+      tagline: document.getElementById('siteTagline').value.trim(),
+      description: document.getElementById('siteDesc').value.trim(),
+      url,
+    };
+
+    const idx = DATA.sites.findIndex(s => s.id === existingId);
+    if (idx >= 0) DATA.sites[idx] = site; else DATA.sites.push(site);
+
+    clearForm();
+    renderAll();
+  });
+
+  document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+
+  document.getElementById('commitBtn').addEventListener('click', async () => {
+    const statusEl = document.getElementById('saveStatus');
+    statusEl.textContent = 'שומר...';
+    statusEl.className = 'status';
+    try {
+      await saveToGithub();
+      statusEl.textContent = '✅ נשמר בהצלחה. האתר יתעדכן בעוד דקה-שתיים.';
+      statusEl.className = 'status ok';
+    } catch (e) {
+      statusEl.textContent = '❌ ' + e.message;
+      statusEl.className = 'status err';
+    }
+  });
+
+  async function unlock() {
+    const gateStatus = document.getElementById('gateStatus');
+    gateStatus.textContent = 'בודק...';
+    gateStatus.className = 'status';
+    try {
+      await loadFromGithub();
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      renderAll();
+    } catch (e) {
+      gateStatus.textContent = '❌ ' + e.message;
+      gateStatus.className = 'status err';
+    }
+  }
+
+  document.getElementById('unlockBtn').addEventListener('click', () => {
+    TOKEN = document.getElementById('tokenInput').value.trim();
+    if (!TOKEN) return;
+    localStorage.setItem('portalAdminToken', TOKEN);
+    unlock();
+  });
+
+  if (TOKEN) unlock();
+</script>
+</body>
+</html>

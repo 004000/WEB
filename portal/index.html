@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מדריך הערוצים — כל ערוצי העדכונים במקום אחד</title>
+<meta name="description" content="מדריך ערוצי עדכונים בזמן אמת: חדשות, קניות, פרסומות ובידור.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --curtain: #2B0F1A;
+    --curtain-deep: #1A0A11;
+    --gold: #E8B94E;
+    --gold-dim: #C79A3D;
+    --cream: #F6EDE2;
+    --ink: #241016;
+    --coral: #FF6B5B;
+    --muted: #C9AF9A;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--curtain-deep);
+    color: var(--cream);
+    font-family: 'Assistant', sans-serif;
+    min-height: 100vh;
+  }
+
+  .ticker {
+    background: var(--ink);
+    color: var(--gold);
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 8px 0;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(232, 185, 78, 0.25);
+  }
+  .ticker span {
+    display: inline-block;
+    padding-inline-end: 60px;
+    animation: ticker-scroll 22s linear infinite;
+  }
+  @keyframes ticker-scroll {
+    from { transform: translateX(100%); }
+    to { transform: translateX(-100%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker span { animation: none; }
+  }
+
+  header.hero {
+    padding: 48px 24px 32px;
+    text-align: center;
+    background: radial-gradient(ellipse at top, rgba(232,185,78,0.12), transparent 60%);
+  }
+  header.hero h1 {
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin: 0 0 8px;
+    color: var(--cream);
+  }
+  header.hero h1 .accent { color: var(--gold); }
+  header.hero p {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .layout {
+    display: flex;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    gap: 32px;
+    align-items: flex-start;
+  }
+
+  nav.guide {
+    flex: 0 0 220px;
+    position: sticky;
+    top: 24px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(232,185,78,0.18);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  nav.guide button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: right;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: var(--muted);
+    padding: 16px 18px;
+    font-family: 'Assistant', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  nav.guide button:last-child { border-bottom: none; }
+  nav.guide button .num {
+    font-family: 'Rubik', monospace;
+    font-weight: 700;
+    color: var(--gold-dim);
+    font-size: 0.85rem;
+    min-width: 22px;
+  }
+  nav.guide button:hover { background: rgba(232,185,78,0.08); color: var(--cream); }
+  nav.guide button.active {
+    background: rgba(232,185,78,0.14);
+    color: var(--gold);
+  }
+  nav.guide button.active .num { color: var(--gold); }
+
+  main.channels { flex: 1; min-width: 0; }
+
+  .category-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .category-title .num {
+    font-family: 'Rubik', monospace;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .category-title h2 {
+    font-family: 'Rubik', sans-serif;
+    font-size: 1.4rem;
+    margin: 0;
+  }
+
+  .cards { display: grid; gap: 16px; }
+
+  .card {
+    background: var(--cream);
+    color: var(--ink);
+    border-radius: 18px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+
+  .card .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Rubik', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--coral);
+    align-self: flex-start;
+  }
+  .card .live .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--coral);
+    box-shadow: 0 0 0 rgba(255,107,91,0.5);
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,107,91,0.5); }
+    70% { box-shadow: 0 0 0 7px rgba(255,107,91,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,107,91,0); }
+  }
+
+  .card h3 { font-family: 'Rubik', sans-serif; font-size: 1.15rem; margin: 0; }
+  .card .tagline { color: var(--gold-dim); font-weight: 600; font-size: 0.85rem; margin-top: -6px; }
+  .card p.desc { margin: 0; color: #5a4038; font-size: 0.92rem; line-height: 1.5; }
+
+  .card a.cta {
+    align-self: flex-start;
+    margin-top: 8px;
+    background: var(--ink);
+    color: var(--gold);
+    text-decoration: none;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 10px 20px;
+    border-radius: 999px;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+  }
+  .card a.cta:hover { background: var(--curtain); transform: translateY(-1px); }
+
+  .empty-state {
+    color: var(--muted);
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(232,185,78,0.3);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 20px;
+  }
+  footer a { color: var(--gold-dim); }
+
+  @media (max-width: 720px) {
+    .layout { flex-direction: column; }
+    nav.guide { position: static; width: 100%; flex: none; }
+    nav.guide { display: flex; overflow-x: auto; }
+    nav.guide button { flex: 0 0 auto; white-space: nowrap; border-bottom: none; border-left: 1px solid rgba(255,255,255,0.06); }
+  }
+</style>
+</head>
+<body>
+
+  <div class="ticker"><span id="tickerText">טוען...</span></div>
+
+  <header class="hero">
+    <h1>מדריך ה<span class="accent">ערוצים</span></h1>
+    <p>כל ערוצי העדכונים בזמן אמת — במקום אחד. בחרו קטגוריה מהתפריט כדי לגלות מה יש בה.</p>
+  </header>
+
+  <div class="layout">
+    <nav class="guide" id="guideNav"></nav>
+    <main class="channels">
+      <div class="category-title">
+        <span class="num" id="activeNum">01</span>
+        <h2 id="activeName">חדשות</h2>
+      </div>
+      <div class="cards" id="cardsContainer"></div>
+    </main>
+  </div>
+
+  <footer>
+    מנוהל דרך <a href="admin.html">אזור ניהול</a>
+  </footer>
+
+  <script>
+    let DATA = { categories: [], sites: [] };
+    let activeCategory = null;
+
+    async function loadData() {
+      const res = await fetch('data.json?_=' + Date.now());
+      DATA = await res.json();
+      activeCategory = DATA.categories[0]?.id || null;
+      renderTicker();
+      renderNav();
+      renderCards();
+    }
+
+    function renderTicker() {
+      const names = DATA.categories.map(c => c.name).join('   •   ');
+      document.getElementById('tickerText').textContent =
+        `🔴 שידור חי   •   מדריך הערוצים: ${names}   •   בחרו ערוץ והצטרפו עכשיו`;
+    }
+
+    function renderNav() {
+      const nav = document.getElementById('guideNav');
+      nav.innerHTML = '';
+      DATA.categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = cat.id === activeCategory ? 'active' : '';
+        btn.innerHTML = `<span class="num">${cat.number}</span><span>${cat.name}</span>`;
+        btn.addEventListener('click', () => {
+          activeCategory = cat.id;
+          renderNav();
+          renderCards();
+        });
+        nav.appendChild(btn);
+      });
+    }
+
+    function renderCards() {
+      const cat = DATA.categories.find(c => c.id === activeCategory);
+      document.getElementById('activeNum').textContent = cat?.number || '';
+      document.getElementById('activeName').textContent = cat?.name || '';
+
+      const container = document.getElementById('cardsContainer');
+      container.innerHTML = '';
+
+      const sites = DATA.sites.filter(s => s.categoryId === activeCategory);
+
+      if (sites.length === 0) {
+        container.innerHTML = '<div class="empty-state">עדיין אין ערוצים בקטגוריה הזו. חוזרים בקרוב.</div>';
+        return;
+      }
+
+      sites.forEach(site => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <span class="live"><span class="dot"></span>פעיל</span>
+          <h3>${site.name}</h3>
+          ${site.tagline ? `<div class="tagline">${site.tagline}</div>` : ''}
+          <p class="desc">${site.description || ''}</p>
+          <a class="cta" href="${site.url}" target="_blank" rel="noopener">כניסה לערוץ ←</a>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
