@@ -222,6 +222,126 @@
     nav.guide { display: flex; overflow-x: auto; }
     nav.guide button { flex: 0 0 auto; white-space: nowrap; border-bottom: none; border-left: 1px solid rgba(255,255,255,0.06); }
   }
+
+  /* View toggle */
+  .view-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .view-toggle button {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(232,185,78,0.3);
+    color: var(--muted);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Assistant', sans-serif;
+  }
+  .view-toggle button.active {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold);
+  }
+
+  /* Embedded-viewer layout */
+  .embed-layout {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+    gap: 0;
+    height: calc(100vh - 220px);
+    min-height: 480px;
+  }
+
+  aside.tree-nav {
+    flex: 0 0 260px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(232,185,78,0.18);
+    border-radius: 16px 0 0 16px;
+    border-inline-end: none;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .tree-cat { border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .tree-cat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: 'Rubik', sans-serif;
+    font-size: 0.9rem;
+    color: var(--cream);
+  }
+  .tree-cat-header .chev {
+    color: var(--gold-dim);
+    transition: transform 0.15s ease;
+    font-size: 0.75rem;
+  }
+  .tree-cat.open .tree-cat-header .chev { transform: rotate(90deg); }
+
+  .tree-cat-items {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease;
+  }
+  .tree-cat.open .tree-cat-items { max-height: 400px; }
+
+  .tree-cat-items button {
+    display: block;
+    width: 100%;
+    text-align: right;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 9px 26px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: 'Assistant', sans-serif;
+  }
+  .tree-cat-items button:hover { background: rgba(232,185,78,0.08); color: var(--cream); }
+  .tree-cat-items button.active {
+    background: rgba(232,185,78,0.16);
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .viewer {
+    flex: 1;
+    background: #0d0508;
+    border: 1px solid rgba(232,185,78,0.18);
+    border-right: none;
+    border-radius: 0 16px 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .viewer-placeholder {
+    color: var(--muted);
+    font-size: 0.95rem;
+    text-align: center;
+    padding: 20px;
+  }
+  #viewerFrame {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  @media (max-width: 720px) {
+    .embed-layout { flex-direction: column; height: auto; }
+    aside.tree-nav { flex: none; width: 100%; border-radius: 16px 16px 0 0; max-height: 260px; }
+    .viewer { border-radius: 0 0 16px 16px; border-right: 1px solid rgba(232,185,78,0.18); height: 60vh; }
+  }
 </style>
 </head>
 <body>
@@ -231,9 +351,13 @@
   <header class="hero">
     <h1>מדריך ה<span class="accent">ערוצים</span></h1>
     <p>כל ערוצי העדכונים בזמן אמת — במקום אחד. בחרו קטגוריה מהתפריט כדי לגלות מה יש בה.</p>
+    <div class="view-toggle">
+      <button id="cardsViewBtn" class="active">תצוגת כרטיסים</button>
+      <button id="embedViewBtn">תצוגת ערוץ מוטמע</button>
+    </div>
   </header>
 
-  <div class="layout">
+  <div class="layout" id="cardsLayout">
     <nav class="guide" id="guideNav"></nav>
     <main class="channels">
       <div class="category-title">
@@ -242,6 +366,14 @@
       </div>
       <div class="cards" id="cardsContainer"></div>
     </main>
+  </div>
+
+  <div class="embed-layout" id="embedLayout" style="display:none;">
+    <aside class="tree-nav" id="treeNav"></aside>
+    <div class="viewer">
+      <div class="viewer-placeholder" id="viewerPlaceholder">בחרו ערוץ מהתפריט בצד כדי לפתוח אותו כאן</div>
+      <iframe id="viewerFrame" style="display:none;"></iframe>
+    </div>
   </div>
 
   <footer>
@@ -255,10 +387,23 @@
     async function loadData() {
       const res = await fetch('data.json?_=' + Date.now());
       DATA = await res.json();
+      applyTheme();
       activeCategory = DATA.categories[0]?.id || null;
       renderTicker();
       renderNav();
       renderCards();
+    }
+
+    function applyTheme() {
+      const t = DATA.theme;
+      if (!t) return;
+      const root = document.documentElement.style;
+      if (t.curtain) root.setProperty('--curtain', t.curtain);
+      if (t.curtainDeep) root.setProperty('--curtain-deep', t.curtainDeep);
+      if (t.gold) root.setProperty('--gold', t.gold);
+      if (t.cream) root.setProperty('--cream', t.cream);
+      if (t.ink) root.setProperty('--ink', t.ink);
+      if (t.coral) root.setProperty('--coral', t.coral);
     }
 
     function renderTicker() {
@@ -312,7 +457,76 @@
       });
     }
 
-    loadData();
+    // ---- View mode switching ----
+    const VIEW_KEY = 'directoryViewMode';
+
+    function setViewMode(mode) {
+      localStorage.setItem(VIEW_KEY, mode);
+      const isCards = mode === 'cards';
+      document.getElementById('cardsLayout').style.display = isCards ? 'flex' : 'none';
+      document.getElementById('embedLayout').style.display = isCards ? 'none' : 'flex';
+      document.getElementById('cardsViewBtn').classList.toggle('active', isCards);
+      document.getElementById('embedViewBtn').classList.toggle('active', !isCards);
+      if (!isCards) renderTree();
+    }
+
+    document.getElementById('cardsViewBtn').addEventListener('click', () => setViewMode('cards'));
+    document.getElementById('embedViewBtn').addEventListener('click', () => setViewMode('embed'));
+
+    const savedMode = localStorage.getItem(VIEW_KEY) || 'cards';
+
+    // ---- Embedded-viewer tree nav ----
+    function renderTree() {
+      const nav = document.getElementById('treeNav');
+      nav.innerHTML = '';
+      DATA.categories.forEach(cat => {
+        const sites = DATA.sites.filter(s => s.categoryId === cat.id);
+        const wrap = document.createElement('div');
+        wrap.className = 'tree-cat';
+
+        const header = document.createElement('div');
+        header.className = 'tree-cat-header';
+        header.innerHTML = `<span>${cat.name}</span><span class="chev">◀</span>`;
+        header.addEventListener('click', () => wrap.classList.toggle('open'));
+        wrap.appendChild(header);
+
+        const itemsWrap = document.createElement('div');
+        itemsWrap.className = 'tree-cat-items';
+
+        if (sites.length === 0) {
+          const empty = document.createElement('div');
+          empty.style.cssText = 'padding:8px 26px;color:var(--muted);font-size:0.8rem;';
+          empty.textContent = 'אין עדיין ערוצים';
+          itemsWrap.appendChild(empty);
+        } else {
+          sites.forEach(site => {
+            const btn = document.createElement('button');
+            btn.textContent = site.name;
+            btn.addEventListener('click', () => openInViewer(site, btn));
+            itemsWrap.appendChild(btn);
+          });
+        }
+
+        wrap.appendChild(itemsWrap);
+        nav.appendChild(wrap);
+      });
+
+      // Open the first category with sites by default
+      const firstWithSites = nav.querySelector('.tree-cat');
+      if (firstWithSites) firstWithSites.classList.add('open');
+    }
+
+    function openInViewer(site, btnEl) {
+      document.querySelectorAll('.tree-cat-items button').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+
+      document.getElementById('viewerPlaceholder').style.display = 'none';
+      const frame = document.getElementById('viewerFrame');
+      frame.style.display = 'block';
+      frame.src = site.url;
+    }
+
+    loadData().then(() => setViewMode(savedMode));
   </script>
 </body>
 </html>

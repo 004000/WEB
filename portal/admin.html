@@ -103,6 +103,41 @@
       <p class="sub">שינויים נשמרים ישירות ל-GitHub, והאתר הציבורי יתעדכן אוטומטית תוך דקה-שתיים.</p>
 
       <div class="panel">
+        <h2>עיצוב וצבעים</h2>
+        <p class="sub" style="margin-top:-6px;">שינוי צבעי האתר הציבורי. השינוי ייכנס לתוקף אחרי לחיצה על "שמור הכל ל-GitHub".</p>
+        <div class="row">
+          <div>
+            <label>רקע ראשי (curtain)</label>
+            <input type="color" id="themeCurtain">
+          </div>
+          <div>
+            <label>רקע כהה (curtainDeep)</label>
+            <input type="color" id="themeCurtainDeep">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>צבע הדגשה (gold)</label>
+            <input type="color" id="themeGold">
+          </div>
+          <div>
+            <label>רקע כרטיסים (cream)</label>
+            <input type="color" id="themeCream">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>טקסט על כרטיסים (ink)</label>
+            <input type="color" id="themeInk">
+          </div>
+          <div>
+            <label>נקודת "פעיל" (coral)</label>
+            <input type="color" id="themeCoral">
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
         <h2>קטגוריות</h2>
         <div id="categoriesList"></div>
         <div class="row" style="margin-top:14px;">
@@ -244,7 +279,27 @@
     document.getElementById('siteUrl').value = '';
   }
 
+  function renderTheme() {
+    const t = DATA.theme || {};
+    document.getElementById('themeCurtain').value = t.curtain || '#2B0F1A';
+    document.getElementById('themeCurtainDeep').value = t.curtainDeep || '#1A0A11';
+    document.getElementById('themeGold').value = t.gold || '#E8B94E';
+    document.getElementById('themeCream').value = t.cream || '#F6EDE2';
+    document.getElementById('themeInk').value = t.ink || '#241016';
+    document.getElementById('themeCoral').value = t.coral || '#FF6B5B';
+  }
+
+  ['themeCurtain', 'themeCurtainDeep', 'themeGold', 'themeCream', 'themeInk', 'themeCoral'].forEach(id => {
+    const key = id.replace('theme', '');
+    const themeKey = key.charAt(0).toLowerCase() + key.slice(1);
+    document.getElementById(id).addEventListener('input', (e) => {
+      if (!DATA.theme) DATA.theme = {};
+      DATA.theme[themeKey] = e.target.value;
+    });
+  });
+
   function renderAll() {
+    renderTheme();
     renderCategories();
     renderSites();
   }

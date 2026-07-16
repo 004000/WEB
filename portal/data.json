@@ -1,4 +1,12 @@
 {
+  "theme": {
+    "curtain": "#2B0F1A",
+    "curtainDeep": "#1A0A11",
+    "gold": "#E8B94E",
+    "cream": "#F6EDE2",
+    "ink": "#241016",
+    "coral": "#FF6B5B"
+  },
   "categories": [
     {
       "id": "news",
