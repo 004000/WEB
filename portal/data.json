@@ -1,9 +1,25 @@
 {
   "categories": [
-    { "id": "news", "name": "חדשות", "number": "01" },
-    { "id": "shopping", "name": "קניות", "number": "02" },
-    { "id": "ads", "name": "פרסומות", "number": "03" },
-    { "id": "entertainment", "name": "בידור", "number": "04" }
+    {
+      "id": "news",
+      "name": "חדשות",
+      "number": "01"
+    },
+    {
+      "id": "shopping",
+      "name": "קניות",
+      "number": "02"
+    },
+    {
+      "id": "ads",
+      "name": "פרסומות",
+      "number": "03"
+    },
+    {
+      "id": "entertainment",
+      "name": "בידור",
+      "number": "04"
+    }
   ],
   "sites": [
     {
