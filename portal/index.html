@@ -320,11 +320,32 @@
     border-right: none;
     border-radius: 0 16px 16px 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
   }
+  .viewer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    background: rgba(232,185,78,0.12);
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(232,185,78,0.18);
+    flex: 0 0 auto;
+  }
+  .viewer-toolbar a {
+    color: var(--gold);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .viewer-toolbar a:hover { text-decoration: underline; }
   .viewer-placeholder {
     color: var(--muted);
     font-size: 0.95rem;
@@ -333,7 +354,7 @@
   }
   #viewerFrame {
     width: 100%;
-    height: 100%;
+    flex: 1;
     border: none;
   }
 
@@ -372,6 +393,10 @@
     <aside class="tree-nav" id="treeNav"></aside>
     <div class="viewer">
       <div class="viewer-placeholder" id="viewerPlaceholder">בחרו ערוץ מהתפריט בצד כדי לפתוח אותו כאן</div>
+      <div class="viewer-toolbar" id="viewerToolbar" style="display:none;">
+        <span>💡 להתחברות עם חשבון גוגל יש לפתוח בטאב נפרד</span>
+        <a id="openNewTabLink" href="#" target="_blank" rel="noopener">פתח בטאב נפרד ↗</a>
+      </div>
       <iframe id="viewerFrame" style="display:none;"></iframe>
     </div>
   </div>
@@ -524,6 +549,10 @@
       const frame = document.getElementById('viewerFrame');
       frame.style.display = 'block';
       frame.src = site.url;
+
+      const toolbar = document.getElementById('viewerToolbar');
+      toolbar.style.display = 'flex';
+      document.getElementById('openNewTabLink').href = site.url;
     }
 
     loadData().then(() => setViewMode(savedMode));

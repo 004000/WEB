@@ -104,7 +104,7 @@
 
       <div class="panel">
         <h2>עיצוב וצבעים</h2>
-        <p class="sub" style="margin-top:-6px;">שינוי צבעי האתר הציבורי. השינוי ייכנס לתוקף אחרי לחיצה על "שמור הכל ל-GitHub".</p>
+        <p class="sub" style="margin-top:-6px;">גררו את הצבעים ותראו שינוי מיידי בתצוגה המקדימה למטה. השינוי נשמר לצמיתות רק אחרי לחיצה על "שמור הכל ל-GitHub".</p>
         <div class="row">
           <div>
             <label>רקע ראשי (curtain)</label>
@@ -135,6 +135,11 @@
             <input type="color" id="themeCoral">
           </div>
         </div>
+        <div style="margin-top:14px;">
+          <button id="resetThemeBtn">↺ אפס לצבעי ברירת המחדל</button>
+        </div>
+        <label style="margin-top:20px;">תצוגה מקדימה חיה</label>
+        <iframe id="previewFrame" src="index.html" style="width:100%; height:420px; border:1px solid var(--line); border-radius:12px; margin-top:6px;"></iframe>
       </div>
 
       <div class="panel">
@@ -279,14 +284,45 @@
     document.getElementById('siteUrl').value = '';
   }
 
+  const DEFAULT_THEME = {
+    curtain: '#2B0F1A',
+    curtainDeep: '#1A0A11',
+    gold: '#E8B94E',
+    cream: '#F6EDE2',
+    ink: '#241016',
+    coral: '#FF6B5B',
+  };
+
+  function applyPreviewTheme() {
+    const frame = document.getElementById('previewFrame');
+    const doc = frame.contentDocument;
+    if (!doc || !doc.documentElement) return;
+    const t = DATA.theme || {};
+    const style = doc.documentElement.style;
+    style.setProperty('--curtain', t.curtain || DEFAULT_THEME.curtain);
+    style.setProperty('--curtain-deep', t.curtainDeep || DEFAULT_THEME.curtainDeep);
+    style.setProperty('--gold', t.gold || DEFAULT_THEME.gold);
+    style.setProperty('--cream', t.cream || DEFAULT_THEME.cream);
+    style.setProperty('--ink', t.ink || DEFAULT_THEME.ink);
+    style.setProperty('--coral', t.coral || DEFAULT_THEME.coral);
+  }
+
+  document.getElementById('previewFrame').addEventListener('load', applyPreviewTheme);
+
+  document.getElementById('resetThemeBtn').addEventListener('click', () => {
+    DATA.theme = { ...DEFAULT_THEME };
+    renderTheme();
+    applyPreviewTheme();
+  });
+
   function renderTheme() {
     const t = DATA.theme || {};
-    document.getElementById('themeCurtain').value = t.curtain || '#2B0F1A';
-    document.getElementById('themeCurtainDeep').value = t.curtainDeep || '#1A0A11';
-    document.getElementById('themeGold').value = t.gold || '#E8B94E';
-    document.getElementById('themeCream').value = t.cream || '#F6EDE2';
-    document.getElementById('themeInk').value = t.ink || '#241016';
-    document.getElementById('themeCoral').value = t.coral || '#FF6B5B';
+    document.getElementById('themeCurtain').value = t.curtain || DEFAULT_THEME.curtain;
+    document.getElementById('themeCurtainDeep').value = t.curtainDeep || DEFAULT_THEME.curtainDeep;
+    document.getElementById('themeGold').value = t.gold || DEFAULT_THEME.gold;
+    document.getElementById('themeCream').value = t.cream || DEFAULT_THEME.cream;
+    document.getElementById('themeInk').value = t.ink || DEFAULT_THEME.ink;
+    document.getElementById('themeCoral').value = t.coral || DEFAULT_THEME.coral;
   }
 
   ['themeCurtain', 'themeCurtainDeep', 'themeGold', 'themeCream', 'themeInk', 'themeCoral'].forEach(id => {
@@ -295,6 +331,7 @@
     document.getElementById(id).addEventListener('input', (e) => {
       if (!DATA.theme) DATA.theme = {};
       DATA.theme[themeKey] = e.target.value;
+      applyPreviewTheme();
     });
   });
 
@@ -302,6 +339,7 @@
     renderTheme();
     renderCategories();
     renderSites();
+    applyPreviewTheme();
   }
 
   document.getElementById('addCatBtn').addEventListener('click', () => {
