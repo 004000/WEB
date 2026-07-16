@@ -257,45 +257,16 @@
       return res.json();
     }
 
-    function renderCard(site, index, status, error) {
+    function buildCardSkeleton(site, index) {
       const card = document.createElement('div');
       card.className = 'card';
-
-      const online = !error;
-      const percent = status ? Math.round(status.percentUsed || 0) : 0;
+      card.id = `card-${index}`;
 
       card.innerHTML = `
-        <span class="dot ${online ? 'online' : 'offline'}"></span>
-        <h2>${site.label || status?.channelName || 'ערוץ'}</h2>
+        <span class="dot" id="dot-${index}"></span>
+        <h2>${site.label || 'ערוץ'}</h2>
         <div class="subtitle">${site.url.replace(/^https?:\/\//, '')}</div>
-        ${error
-          ? `<div class="error-msg">⚠️ ${error}</div>`
-          : `
-            <div class="metric-row">
-              <span class="label">מחוברים כעת</span>
-              <span class="value">${status.connectedUsersLive ?? '-'}</span>
-            </div>
-            <div class="metric-row">
-              <span class="label">הודעות בערוץ</span>
-              <span class="value">${status.messageCount ?? '-'}</span>
-            </div>
-            <div class="metric-row">
-              <span class="label">תפוסת אחסון</span>
-              <bdi class="value">${formatBytes(status.usedBytes)} / ${formatBytes(status.maxBytes)}</bdi>
-            </div>
-            <div class="bar-track"><div class="bar-fill ${barClass(percent)}" style="width:${Math.min(percent,100)}%"></div></div>
-            <div class="metric-row" style="border-top:none; margin-top:6px;">
-              <span class="label">גיבוי אוטומטי</span>
-              <span class="value">${status.backupEnabled ? '✅ מופעל' : '❌ לא מוגדר'}</span>
-            </div>
-            ${status.estimatedDaysLeft != null
-              ? `<div class="metric-row" style="border-top:none;">
-                  <span class="label">זמן משוער עד מילוי</span>
-                  <span class="value">${Math.round(status.estimatedDaysLeft)} ימים</span>
-                </div>`
-              : ''}
-          `
-        }
+        <div id="body-${index}"></div>
         <div class="edit-link" data-index="${index}">ערוך אתר זה</div>
       `;
 
@@ -303,23 +274,80 @@
       return card;
     }
 
+    function bodyHtml(status, error) {
+      const percent = status ? Math.round(status.percentUsed || 0) : 0;
+      if (error) {
+        return `<div class="error-msg">⚠️ ${error}</div>`;
+      }
+      return `
+        <div class="metric-row">
+          <span class="label">מחוברים כעת</span>
+          <span class="value">${status.connectedUsersLive ?? '-'}</span>
+        </div>
+        <div class="metric-row">
+          <span class="label">הודעות בערוץ</span>
+          <span class="value">${status.messageCount ?? '-'}</span>
+        </div>
+        <div class="metric-row">
+          <span class="label">תפוסת אחסון</span>
+          <bdi class="value">${formatBytes(status.usedBytes)} / ${formatBytes(status.maxBytes)}</bdi>
+        </div>
+        <div class="bar-track"><div class="bar-fill ${barClass(percent)}" style="width:${Math.min(percent,100)}%"></div></div>
+        <div class="metric-row" style="border-top:none; margin-top:6px;">
+          <span class="label">גיבוי אוטומטי</span>
+          <span class="value">${status.backupEnabled ? '✅ מופעל' : '❌ לא מוגדר'}</span>
+        </div>
+        ${status.estimatedDaysLeft != null
+          ? `<div class="metric-row" style="border-top:none;">
+              <span class="label">זמן משוער עד מילוי</span>
+              <span class="value">${Math.round(status.estimatedDaysLeft)} ימים</span>
+            </div>`
+          : ''}
+      `;
+    }
+
+    function updateCard(index, site, status, error) {
+      const dot = document.getElementById(`dot-${index}`);
+      const body = document.getElementById(`body-${index}`);
+      if (!dot || !body) return;
+      dot.className = 'dot ' + (error ? 'offline' : 'online');
+      body.innerHTML = bodyHtml(status, error);
+
+      // channel name may only be known after the first successful status fetch
+      if (status?.channelName && !site.label) {
+        const h2 = document.getElementById(`card-${index}`)?.querySelector('h2');
+        if (h2) h2.textContent = status.channelName;
+      }
+    }
+
+    let builtSitesKey = null;
+
     async function refreshAll() {
       const sites = loadSites();
       const grid = document.getElementById('grid');
-      grid.innerHTML = '';
 
       if (sites.length === 0) {
         grid.innerHTML = '<p style="color:var(--text-dim)">אין עדיין אתרים מוגדרים. לחצו על "הוסף / ערוך אתר" כדי להתחיל.</p>';
+        builtSitesKey = null;
         return;
+      }
+
+      // Only rebuild the card skeletons when the site list itself changed
+      // (added/removed/reordered/edited) — never on a normal data refresh.
+      const sitesKey = JSON.stringify(sites);
+      if (builtSitesKey !== sitesKey) {
+        grid.innerHTML = '';
+        sites.forEach((site, i) => grid.appendChild(buildCardSkeleton(site, i)));
+        builtSitesKey = sitesKey;
       }
 
       for (let i = 0; i < sites.length; i++) {
         const site = sites[i];
         try {
           const status = await fetchStatus(site);
-          grid.appendChild(renderCard(site, i, status, null));
+          updateCard(i, site, status, null);
         } catch (e) {
-          grid.appendChild(renderCard(site, i, null, e.message));
+          updateCard(i, site, null, e.message);
         }
       }
     }
