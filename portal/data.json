@@ -53,6 +53,14 @@
       "tagline": "פרסומות ותוכן ממומן",
       "description": "מרחב לפרסום עסקים ושירותים.",
       "url": "https://ads-channel.onrender.com"
+    },
+    {
+      "id": "site_1784206013575",
+      "name": "בידור",
+      "categoryId": "entertainment",
+      "tagline": "",
+      "description": "",
+      "url": "channels-directory.onrender.com/admin.html"
     }
   ]
 }
