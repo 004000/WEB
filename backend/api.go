@@ -5,8 +5,18 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
+
+// sanitizeImportedText מנטרל תגי HTML/JS מטקסט שמגיע דרך ה-API החיצוני (import),
+// מבלי לפגוע במרכאות או בעיצוב מרקדאון רגיל (בולד, רשימות, קוד וכו').
+// הגנת עומק: גם אם ה-frontend ירנדר עם sanitizer מושבת, טקסט שנשמר כבר "נקי" לא יכול
+// להזריק תגיות פעילות.
+func sanitizeImportedText(s string) string {
+	r := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
+	return r.Replace(s)
+}
 
 // getStatus is a lightweight, API-key-protected endpoint (same key as message
 // import) that exposes basic health/usage info for an external multi-channel
@@ -84,7 +94,7 @@ func addNewPost(w http.ResponseWriter, r *http.Request) {
 	message.Type = "md" //body.Type
 	message.Author = body.Author
 	message.Timestamp = body.Timestamp
-	message.Text = body.Text
+	message.Text = sanitizeImportedText(body.Text)
 	message.Views = 0
 	message.IsAds = body.IsAds
 
