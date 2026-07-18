@@ -63,6 +63,8 @@ export class MessageComponent implements OnInit, AfterViewInit, OnDestroy {
   ) { }
 
   reacts: string[] = [];
+  isExpanded: boolean = false;
+  private readonly collapseCharThreshold = 500;
   private closeEmojiMenuTimeout: any;
   private isScrolling = false;
   private hoverTimer: any;
@@ -289,5 +291,14 @@ export class MessageComponent implements OnInit, AfterViewInit, OnDestroy {
     navigator.clipboard.writeText(url).then(() => {
       this.toastrService.success('', 'הקישור הועתק ללוח');
     });
+  }
+
+  get isLongMessage(): boolean {
+    return !!this.message?.text && this.message.text.length > this.collapseCharThreshold;
+  }
+
+  toggleExpand(event?: MouseEvent) {
+    event?.stopPropagation();
+    this.isExpanded = !this.isExpanded;
   }
 }

@@ -64,10 +64,18 @@
       #p="ngbPopover">
       <div class="d-flex flex-column bg-light rounded-4 border fs-5 f lh-base message-card"
         [ngStyle]="{'opacity': (message.deleted || isSchedulingMessage) ? 0.5 : 1}">
-        <div class="m-2" #media>
+        <div class="m-2 message-body-wrap" [class.message-collapsed]="isLongMessage && !isExpanded" #media>
           <markdown [data]="message.text" (click)="viewLargeImage($event)">
           </markdown>
         </div>
+        @if (isLongMessage) {
+        <div class="d-flex justify-content-center read-more-row" (click)="toggleExpand($event)">
+          <button class="read-more-btn" type="button">
+            {{ isExpanded ? 'הצג פחות' : 'קרא עוד...' }}
+            <nb-icon [icon]="isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"></nb-icon>
+          </button>
+        </div>
+        }
         <div class="d-flex justify-content-between align-items-center mx-2 gap-2 mb-1">
           @if (message.views) {
           <div class="d-flex flex-row align-items-center text-black-50 gap-1" title="צפיות">
