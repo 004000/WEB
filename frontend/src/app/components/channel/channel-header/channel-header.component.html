@@ -64,6 +64,11 @@
   </div>
 
   <div class="header-actions">
+    <a class="dev-credit-badge" href="mailto:?subject=מעוניינים בהקמת ערוץ&body=שלום, אשמח שתחזרו אליי עם פרטים לצורך הקמת ערוץ." title="מתוחזק ומפותח ע&quot;י Sionyx פתרונות">
+      <nb-icon icon="monitor-outline"></nb-icon>
+      <span>מתוחזק ומפותח ע"י Sionyx פתרונות</span>
+    </a>
+
     @if (chatService.channelInfo?.contact_us) {
       <button nbButton shape="round" class="m-2" title="צור קשר" (click)="openContactUs()" status="info">
         <nb-icon icon="email-outline"></nb-icon>

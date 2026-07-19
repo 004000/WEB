@@ -4,6 +4,35 @@
     cursor: pointer;
 }
 
+.dev-credit-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--text-hint-color, #8f9bb3);
+    background: var(--background-basic-color-2);
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+        background: var(--background-basic-color-3, #e8e8ec);
+        color: var(--text-basic-color, inherit);
+    }
+
+    nb-icon {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .dev-credit-badge span {
+        display: none;
+    }
+}
+
 .live-users-badge {
     display: flex;
     align-items: center;
