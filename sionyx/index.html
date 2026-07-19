@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sionyx פתרונות — מערכות חיות לעסקים</title>
+<meta name="description" content="Sionyx פתרונות — פיתוח פלטפורמות, ערוצי תקשורת חיים, אוטומציה ותחזוקת שרתים.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F0B1F;
+    --ink-soft: #171227;
+    --violet: #6A6FFF;
+    --magenta: #A24DFF;
+    --paper: #F5F3FF;
+    --paper-dim: #EDEAFB;
+    --slate: #9992BD;
+    --text: #EDEBFA;
+    --mint: #34D399;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'Assistant', sans-serif;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; }
+
+  .live-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 0 rgba(52, 211, 153, 0.5);
+    animation: pulse 1.8s infinite;
+    margin-left: 6px;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+    70% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Rubik', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--mint);
+    text-transform: uppercase;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 6vw;
+    background: rgba(15, 11, 31, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .logo-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--violet), var(--magenta));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    color: #fff;
+  }
+  .logo-text {
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    font-size: 1.15rem;
+  }
+  nav {
+    display: flex;
+    gap: 28px;
+    font-size: 0.92rem;
+  }
+  nav a { text-decoration: none; color: var(--slate); transition: color 0.15s; }
+  nav a:hover { color: var(--text); }
+  .nav-cta {
+    background: linear-gradient(135deg, var(--violet), var(--magenta));
+    color: #fff !important;
+    padding: 9px 20px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  @media (max-width: 800px) { nav a:not(.nav-cta) { display: none; } }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding: 100px 6vw 80px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: 50%;
+    transform: translateX(50%);
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(circle, rgba(106,111,255,0.25), transparent 65%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    position: relative;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+    line-height: 1.15;
+    max-width: 820px;
+    margin: 18px auto 20px;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(135deg, var(--violet), var(--magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero p.lead {
+    position: relative;
+    max-width: 560px;
+    margin: 0 auto 34px;
+    color: var(--slate);
+    font-size: 1.08rem;
+    line-height: 1.6;
+  }
+  .hero-ctas {
+    position: relative;
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--violet), var(--magenta));
+    color: #fff;
+    text-decoration: none;
+    padding: 14px 30px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 10px 30px rgba(106,111,255,0.35);
+  }
+  .btn-ghost {
+    border: 1px solid rgba(255,255,255,0.18);
+    color: var(--text);
+    text-decoration: none;
+    padding: 14px 30px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  /* ---------- Sections shared ---------- */
+  section { padding: 90px 6vw; }
+  .section-head { text-align: center; max-width: 620px; margin: 0 auto 50px; }
+  .section-head h2 {
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    margin-top: 10px;
+  }
+  .section-head p { color: var(--slate); margin-top: 12px; font-size: 1rem; }
+
+  /* ---------- Services ---------- */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .service-card {
+    background: var(--ink-soft);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 28px 24px;
+  }
+  .service-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(106,111,255,0.2), rgba(162,77,255,0.2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+  .service-card h3 {
+    font-family: 'Rubik', sans-serif;
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+  }
+  .service-card p { color: var(--slate); font-size: 0.9rem; line-height: 1.55; }
+
+  /* ---------- Portfolio ---------- */
+  .portfolio-wrap { background: var(--paper); color: var(--ink); border-radius: 32px; margin: 0 6vw; padding: 70px 6vw; }
+  .portfolio-wrap .section-head p { color: #6b6485; }
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .portfolio-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(80, 60, 140, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform 0.15s ease;
+  }
+  .portfolio-card:hover { transform: translateY(-3px); }
+  .portfolio-card .tag {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--violet);
+    background: var(--paper-dim);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .portfolio-card h3 { font-family: 'Rubik', sans-serif; font-size: 1.05rem; }
+  .portfolio-card p { color: #6b6485; font-size: 0.88rem; line-height: 1.5; }
+  .portfolio-card .link { font-size: 0.82rem; font-weight: 700; color: var(--violet); margin-top: auto; }
+
+  /* ---------- Process ---------- */
+  .process-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 26px;
+    max-width: 1100px;
+    margin: 0 auto;
+    counter-reset: step;
+  }
+  .process-step { position: relative; padding-inline-start: 46px; }
+  .process-step .n {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--violet), var(--magenta));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+  .process-step h3 { font-family: 'Rubik', sans-serif; font-size: 1rem; margin-bottom: 6px; }
+  .process-step p { color: var(--slate); font-size: 0.88rem; line-height: 1.55; }
+
+  /* ---------- CTA ---------- */
+  .cta-band {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(106,111,255,0.15), rgba(162,77,255,0.15));
+    border-radius: 28px;
+    margin: 0 6vw;
+    padding: 70px 6vw;
+  }
+  .cta-band h2 { font-family: 'Rubik', sans-serif; font-weight: 800; font-size: clamp(1.6rem, 4vw, 2.3rem); margin-bottom: 14px; }
+  .cta-band p { color: var(--slate); max-width: 480px; margin: 0 auto 28px; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    padding: 40px 6vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    color: var(--slate);
+    font-size: 0.82rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 60px;
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <a class="logo" href="#top">
+      <span class="logo-mark">S</span>
+      <span class="logo-text">Sionyx</span>
+    </a>
+    <nav>
+      <a href="#services">התמחויות</a>
+      <a href="#portfolio">מה בנינו</a>
+      <a href="#process">איך זה עובד</a>
+      <a class="nav-cta" href="https://mail.google.com/mail/?view=cm&fs=1&to=toda134342@gmail.com&su=%D7%9E%D7%A2%D7%95%D7%A0%D7%99%D7%99%D7%A0%D7%99%D7%9D%20%D7%91%D7%94%D7%A7%D7%9E%D7%AA%20%D7%9E%D7%A2%D7%A8%D7%9B%D7%AA&body=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%94%D7%A6%D7%95%D7%A8%D7%9A%20%D7%A9%D7%9C%D7%99." target="_blank" rel="noopener">בואו נדבר</a>
+    </nav>
+  </header>
+
+  <div id="top" class="hero">
+    <span class="eyebrow"><span class="live-dot"></span>מערכות חיות, פועלות עכשיו</span>
+    <h1>הופכים רעיון עסקי<br>ל<span class="grad">מערכת חיה</span> שעובדת בשבילכם</h1>
+    <p class="lead">
+      אנחנו בונים ומתחזקים פלטפורמות, ערוצי תקשורת בזמן אמת, כלי אוטומציה ותשתיות ענן —
+      מהרעיון הראשוני ועד התחזוקה השוטפת.
+    </p>
+    <div class="hero-ctas">
+      <a class="btn-primary" href="https://mail.google.com/mail/?view=cm&fs=1&to=toda134342@gmail.com&su=%D7%9E%D7%A2%D7%95%D7%A0%D7%99%D7%99%D7%A0%D7%99%D7%9D%20%D7%91%D7%94%D7%A7%D7%9E%D7%AA%20%D7%9E%D7%A2%D7%A8%D7%9B%D7%AA&body=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%94%D7%A6%D7%95%D7%A8%D7%9A%20%D7%A9%D7%9C%D7%99." target="_blank" rel="noopener">ספרו לנו על המערכת שלכם</a>
+      <a class="btn-ghost" href="#portfolio">ראו מה כבר בנינו</a>
+    </div>
+  </div>
+
+  <section id="services">
+    <div class="section-head">
+      <span class="eyebrow">ההתמחויות שלנו</span>
+      <h2>שותפים טכנולוגיים, לא רק ספקים</h2>
+      <p>מהארכיטקטורה הראשונית ועד התחזוקה היומיומית — נשארים בתמונה לאורך כל הדרך.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🧩</div>
+        <h3>פיתוח פלטפורמות ומערכות Web</h3>
+        <p>מבניית פלטפורמות שיתופיות ועד דאשבורדים לניהול פנים-ארגוני, בארכיטקטורה שמבטיחה יציבות וביצועים.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💬</div>
+        <h3>ערוצי תקשורת בזמן אמת</h3>
+        <p>הקמה, עיצוב ותחזוקה של ערוצי עדכונים חיים — מהתוכן ועד ניהול המשתמשים והתפוסה, הכל במקום אחד.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">⚙️</div>
+        <h3>אוטומציה וכלים ייעודיים</h3>
+        <p>הופכים תהליכים ידניים ומתישים לפעולה אוטומטית בלחיצת כפתור — בוטים, סקריפטים וזרימות עבודה חכמות.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">☁️</div>
+        <h3>תשתיות ענן ותחזוקה</h3>
+        <p>הקמת שרתים המותאמים לעומסים משתנים, כולל גיבויים אוטומטיים, ניטור פעיל והתראות מקדימות.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="portfolio-wrap" id="portfolio">
+    <div class="section-head">
+      <span class="eyebrow" style="color:var(--violet);">מה כבר בנינו</span>
+      <h2>לא תיק עבודות בפוטושופ — מערכות שרצות ממש עכשיו</h2>
+      <p>רשת ערוצי עדכונים חיה, שלמה בפני עצמה: תוכן, ניהול, ניטור וגיבוי אוטומטי.</p>
+    </div>
+    <div class="portfolio-grid">
+      <a class="portfolio-card" href="https://my-channel-w1nx.onrender.com" target="_blank" rel="noopener">
+        <span class="tag">חדשות</span>
+        <h3>ערוץ עדכונים כשר</h3>
+        <p>עדכוני חדשות בזמן אמת ממספר מקורות, עם חיפוש, תגובות ומעקב חי אחר משתתפים.</p>
+        <span class="link">בקרו בערוץ ←</span>
+      </a>
+      <a class="portfolio-card" href="https://shopping-channel.onrender.com" target="_blank" rel="noopener">
+        <span class="tag">קניות</span>
+        <h3>ערוץ הקניות</h3>
+        <p>עדכוני מבצעים והנחות בזמן אמת, בממשק צ'אט אינטואיטיבי ונגיש.</p>
+        <span class="link">בקרו בערוץ ←</span>
+      </a>
+      <a class="portfolio-card" href="https://entertainment-channel.onrender.com" target="_blank" rel="noopener">
+        <span class="tag">בידור</span>
+        <h3>ערוץ הבידור</h3>
+        <p>פלטפורמה חדשה בבנייה, מוכנה לקבל תוכן — אותה תשתית, קטגוריה חדשה.</p>
+        <span class="link">בקרו בערוץ ←</span>
+      </a>
+      <a class="portfolio-card" href="https://channels-directory.onrender.com" target="_blank" rel="noopener">
+        <span class="tag">פורטל</span>
+        <h3>מדריך הערוצים המאוחד</h3>
+        <p>אתר שער ציבורי שמחבר בין כל הערוצים לפי קטגוריות, עם ניהול עצמאי מלא.</p>
+        <span class="link">בקרו בפורטל ←</span>
+      </a>
+    </div>
+  </div>
+
+  <section id="process">
+    <div class="section-head">
+      <span class="eyebrow">איך זה עובד</span>
+      <h2>מרעיון למערכת חיה, בארבעה שלבים</h2>
+    </div>
+    <div class="process-grid">
+      <div class="process-step">
+        <span class="n">01</span>
+        <h3>הבנת הצורך</h3>
+        <p>לומדים את הלוגיקה והתהליכים שלכם כדי להציע את הפתרון המדויק ביותר, לא פתרון גנרי.</p>
+      </div>
+      <div class="process-step">
+        <span class="n">02</span>
+        <h3>תכנון וארכיטקטורה</h3>
+        <p>בוחרים את הטכנולוגיה הנכונה למקרה שלכם, ומתכננים מבנה נתונים ותשתיות שיחזיקו לאורך זמן.</p>
+      </div>
+      <div class="process-step">
+        <span class="n">03</span>
+        <h3>פיתוח והטמעה</h3>
+        <p>כותבים קוד מודולרי וברור, מתקינים ומקימים את המערכת בפועל, לא רק בתיאוריה.</p>
+      </div>
+      <div class="process-step">
+        <span class="n">04</span>
+        <h3>תמיכה שוטפת</h3>
+        <p>נשארים בתמונה: ניטור פעיל, גיבויים אוטומטיים, שדרוגים ותמיכה טכנית שוטפת.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-band">
+    <h2>יש לכם רעיון שצריך להפוך למערכת?</h2>
+    <p>ספרו לנו במה אתם מתלבטים — נחזור אליכם עם תמונת מצב ברורה, בלי מחויבות.</p>
+    <a class="btn-primary" href="https://mail.google.com/mail/?view=cm&fs=1&to=toda134342@gmail.com&su=%D7%9E%D7%A2%D7%95%D7%A0%D7%99%D7%99%D7%A0%D7%99%D7%9D%20%D7%91%D7%94%D7%A7%D7%9E%D7%AA%20%D7%9E%D7%A2%D7%A8%D7%9B%D7%AA&body=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%94%D7%A6%D7%95%D7%A8%D7%9A%20%D7%A9%D7%9C%D7%99." target="_blank" rel="noopener">בואו נדבר תכל'ס</a>
+  </div>
+
+  <footer>
+    <span>Sionyx © 2026 — כל הזכויות שמורות</span>
+    <span>office: toda134342@gmail.com</span>
+  </footer>
+
+</body>
+</html>
