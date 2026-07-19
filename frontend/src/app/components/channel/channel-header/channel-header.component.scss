@@ -7,28 +7,55 @@
 .dev-credit-badge {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     text-decoration: none;
-    color: var(--text-hint-color, #8f9bb3);
-    background: var(--background-basic-color-2);
-    border-radius: 16px;
-    padding: 6px 12px;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    background: var(--background-basic-color-1, #fff);
+    border: 1px solid var(--border-basic-color-3, #e4e9f2);
+    border-radius: 20px;
+    padding: 4px 12px 4px 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
 
     &:hover {
-        background: var(--background-basic-color-3, #e8e8ec);
-        color: var(--text-basic-color, inherit);
-    }
-
-    nb-icon {
-        font-size: 1rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+        transform: translateY(-1px);
     }
 }
 
+.dev-credit-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6a6fff, #a24dff);
+    color: #fff;
+    font-family: 'Rubik', 'Assistant', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.dev-credit-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.dev-credit-label {
+    font-size: 0.62rem;
+    color: var(--text-hint-color, #8f9bb3);
+}
+
+.dev-credit-brand {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #6a6fff;
+}
+
 @media (max-width: 600px) {
-    .dev-credit-badge span {
+    .dev-credit-badge .dev-credit-text {
         display: none;
     }
 }
