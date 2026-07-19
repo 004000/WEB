@@ -91,6 +91,35 @@ nb-icon {
     transform: translateY(-5px);
   }
 
+  markdown table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 0.9em;
+    margin: 6px 0;
+  }
+
+  markdown th, markdown td {
+    padding: 6px 10px;
+    text-align: center;
+  }
+
+  markdown th {
+    background: rgba(102, 111, 255, 0.12);
+    font-weight: 700;
+  }
+
+  markdown tr:nth-child(even) td {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  markdown tr:not(:last-child) td {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
   i {
     cursor: pointer;
   }
